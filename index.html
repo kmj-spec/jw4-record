@@ -317,7 +317,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const hiddenNews=new Set((()=>{try{return JSON.parse(ls("jwNewsHide")||"[]")}catch(e){return []}})());
   function renderNews(){
     const NN=3,own=!!ls("jwToken"),shown=news.filter(x=>!hiddenNews.has(nkey(x.title))),list=shown.slice(0,newsAll?10:NN);
-    const isNew=x=>Date.now()-Date.parse(x.added||"")<48*3600e3;
+    // N: 목록에 들어온 지 48시간 안 + 발행된 지 3일 안 된 기사(옛 기사가 검색에 새로 잡힌 경우는 제외).
+    const isNew=x=>{const a=Date.parse(x.added||""),p=Date.parse(x.date||"");return Date.now()-a<48*3600e3&&a-p<72*3600e3;};
     $("newsSec").hidden=!shown.length;
     const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}`;};
     $("newsList").innerHTML=list.map(x=>`<li${own?' class="own"':""}><a href="${esc(x.link)}" target="_blank" rel="noopener">${isNew(x)?'<span class="nb" aria-label="새 기사">N</span>':""}${esc(x.title)}</a><div class="src">${esc(x.source||"")}${x.source?" · ":""}${md(x.date)}</div>${own?`<button type="button" class="x" data-t="${esc(x.title)}" aria-label="이 기사 빼기">×</button>`:""}</li>`).join("");
