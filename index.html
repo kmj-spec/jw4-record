@@ -155,6 +155,13 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .news .x:hover{background:var(--line)}
 .more{display:block;width:100%;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;padding:8px;cursor:pointer}
 #foot{font-size:10px;letter-spacing:.02em}
+.visits{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.visits b{color:var(--ink);font-family:var(--mono)}
+.visits .spark{display:flex;align-items:flex-end;gap:4px;height:28px;margin-top:8px}
+.visits .spark span{flex:1;background:var(--line);border-radius:2px;min-height:2px}
+.visits .spark span:last-child{background:var(--red)}
+.visits .days{display:flex;gap:4px;margin-top:3px;font-size:9px;font-family:var(--mono)}
+.visits .days span{flex:1;text-align:center}
 .credit{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:28px 0 8px;font-family:var(--body);font-size:10px;letter-spacing:.02em}
 .credit span{grid-column:2;color:var(--muted);opacity:.6}
 .credit a{grid-column:3;justify-self:end;color:var(--muted);text-decoration:none}
@@ -223,6 +230,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
     <div class="scroll"><table id="tbl"></table></div>
   </section>
 
+  <div class="visits" id="visits" hidden></div>
   <p class="foot" id="foot" hidden>출처: KBL 공식 홈페이지</p>
   <p class="credit"><button type="button" class="inst" id="instLink" hidden>앱으로 설치</button><span>@winning_woong_4</span><a href="https://ig.me/m/winning_woong_4" target="_blank" rel="noopener">오류 문의 · 신고</a></p>
 </div>
@@ -406,6 +414,28 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     }
     done("아직 반영 전이에요. 잠시 뒤 새로고침해 주세요.");
   };
+
+  // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
+  // 숫자는 열쇠가 있는 기기에만 보인다.
+  const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-jw4";
+  const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
+  (async()=>{
+    const own=!!store.get("jwToken");
+    if(!own&&store.get("jwSeen")!==kst()){
+      store.set("jwSeen",kst());
+      ["total","d-"+kst()].forEach(k=>fetch(`${CNT}/hit/${NS}/${k}`,{keepalive:true}).catch(()=>{}));
+    }
+    if(!own)return;
+    const get=k=>fetch(`${CNT}/get/${NS}/${k}`).then(r=>r.ok?r.json():{value:0}).then(d=>Number(d.value)||0).catch(()=>null);
+    const days=[6,5,4,3,2,1,0].map(kst);
+    const [total,...vals]=await Promise.all([get("total"),...days.map(d=>get("d-"+d))]);
+    if(total===null)return;
+    const max=Math.max(...vals,1),v=i=>vals[i]||0;
+    $("visits").innerHTML=`방문자 · 오늘 <b>${v(6)}</b> · 어제 <b>${v(5)}</b> · 누적 <b>${total}</b> <span style="opacity:.6">(나만 보여요)</span>`+
+      `<div class="spark">${vals.map(x=>`<span style="height:${Math.round((x||0)/max*100)}%" title="${x||0}"></span>`).join("")}</div>`+
+      `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
+    $("visits").hidden=false;
+  })();
 
   // 앱 설치 안내 팝업: 휴대폰에서, 아직 앱으로 열지 않았을 때만.
   const ua=navigator.userAgent;
