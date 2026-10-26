@@ -140,6 +140,11 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .news a:hover{text-decoration:underline}
 .news .src{font-size:11px;color:var(--muted);margin-top:3px}
 .news li{position:relative}
+body.on-news > .wrap:not(#newsPage){display:none}
+.np-head{display:flex;flex-direction:column;align-items:flex-start;gap:10px;border-bottom:3px solid var(--red);padding-bottom:14px}
+.np-head h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;line-height:1}
+.back{border:0;background:none;padding:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+#newsYears{align-self:flex-start}
 .pend{border:1px dashed var(--red);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--red-soft)}
 .pend .ph{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px}
 .pend .pi{padding:8px 0;border-top:1px solid var(--line)}
@@ -202,7 +207,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
     <h2>최근 기사</h2>
     <div class="pend" id="newsPend" hidden></div>
     <ul class="news" id="newsList"></ul>
-    <button type="button" class="more" id="newsMore" hidden></button>
+    <button type="button" class="more" id="newsMore" hidden>더 보기</button>
   </section>
 
   <section id="gameSec" hidden>
@@ -236,6 +241,18 @@ th:not(:first-child),td:not(:first-child){text-align:center}
   <div class="visits" id="visits" hidden></div>
 </div>
 
+<!-- 기사 모아보기: 최근 기사의 '더 보기'로 여는 새 화면(#news). 연도별 탭. -->
+<div class="wrap" id="newsPage" hidden>
+  <header class="np-head">
+    <button type="button" class="back" id="newsBack">← 돌아가기</button>
+    <h1>기사 모아보기</h1>
+  </header>
+  <div class="seg" role="group" aria-label="연도 선택" id="newsYears"></div>
+  <section id="newsArch">
+    <ul class="news" id="newsAllList"></ul>
+  </section>
+</div>
+
 <div class="modal" id="instModal" hidden role="dialog" aria-modal="true" aria-labelledby="instTitle">
   <div class="sheet">
     <div class="top"><img src="icons/icon-192.png" alt=""><h3 id="instTitle">앱으로 설치하기</h3></div>
@@ -250,7 +267,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  let seasons=[], meta={}, mode="sum", logs={}, gSel=null, gAll=false, newsAll=false, news=[];
+  let seasons=[], meta={}, mode="sum", logs={}, gSel=null, gAll=false, news=[];
   const n=v=>Number(v)||0;
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   // 표마다 따로: ? 를 누른 표만 한글 뜻을 보여 준다(표를 다시 그려도 상태 유지).
@@ -341,34 +358,55 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   // 확인 대기: 새로 들어온 기사(ok:false)는 열쇠가 있는 기기에만 보이고, '게시'를 눌러야 모두에게 보인다.
   const okNews=new Set((()=>{try{return JSON.parse(ls("jwNewsOk")||"[]")}catch(e){return []}})());
   const keep=(k,s)=>{try{localStorage.setItem(k,JSON.stringify([...s]))}catch(e){}};
+  // N: 목록에 들어온 지 48시간 안 + 발행된 지 3일 안 된 기사(옛 기사가 검색에 새로 잡힌 경우는 제외).
+  const isNew=x=>{const a=Date.parse(x.added||""),p=Date.parse(x.date||"");return Date.now()-a<48*3600e3&&a-p<72*3600e3;};
+  const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}`;};
+  const isOk=x=>x.ok!==false||okNews.has(nkey(x.title));
+  const liveNews=()=>news.filter(x=>!hiddenNews.has(nkey(x.title)));
+  const newsItem=(x,own)=>`<li${own?' class="own"':""}><a href="${esc(x.link)}" target="_blank" rel="noopener">${isNew(x)?'<span class="nb" aria-label="새 기사">N</span>':""}${esc(x.title)}</a><div class="src">${esc(x.source||"")}${x.source?" · ":""}${md(x.date)}</div>${own?`<button type="button" class="x" data-hide="${esc(x.title)}" aria-label="이 기사 빼기">×</button>`:""}</li>`;
   function renderNews(){
-    const NN=3,own=!!ls("jwToken"),live=news.filter(x=>!hiddenNews.has(nkey(x.title)));
-    const isOk=x=>x.ok!==false||okNews.has(nkey(x.title));
-    const shown=live.filter(isOk),pending=own?live.filter(x=>!isOk(x)):[],list=shown.slice(0,newsAll?10:NN);
-    // N: 목록에 들어온 지 48시간 안 + 발행된 지 3일 안 된 기사(옛 기사가 검색에 새로 잡힌 경우는 제외).
-    const isNew=x=>{const a=Date.parse(x.added||""),p=Date.parse(x.date||"");return Date.now()-a<48*3600e3&&a-p<72*3600e3;};
+    const NN=5,own=!!ls("jwToken"),live=liveNews();
+    const shown=live.filter(isOk),pending=own?live.filter(x=>!isOk(x)):[];
     $("newsSec").hidden=!shown.length&&!pending.length;
-    const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}`;};
     $("newsPend").hidden=!pending.length;
     $("newsPend").innerHTML=pending.length?`<div class="ph">확인 대기 ${pending.length}개 · 게시하기 전에는 나에게만 보여요</div>`+pending.map(x=>`<div class="pi"><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="src">${esc(x.source||"")} · ${md(x.date)}</div><div class="pb"><button type="button" class="ok" data-ok="${esc(x.title)}">게시</button><button type="button" data-hide="${esc(x.title)}">빼기</button></div></div>`).join(""):"";
-    $("newsList").innerHTML=list.map(x=>`<li${own?' class="own"':""}><a href="${esc(x.link)}" target="_blank" rel="noopener">${isNew(x)?'<span class="nb" aria-label="새 기사">N</span>':""}${esc(x.title)}</a><div class="src">${esc(x.source||"")}${x.source?" · ":""}${md(x.date)}</div>${own?`<button type="button" class="x" data-hide="${esc(x.title)}" aria-label="이 기사 빼기">×</button>`:""}</li>`).join("");
-    $("newsMore").hidden=shown.length<=NN;$("newsMore").textContent=newsAll?"접기":"더 보기";
+    $("newsList").innerHTML=shown.slice(0,NN).map(x=>newsItem(x,own)).join("");
+    $("newsMore").hidden=shown.length<=NN;
+    if(document.body.classList.contains("on-news"))renderArchive();
   }
-  $("newsMore").onclick=()=>{newsAll=!newsAll;renderNews();};
+  // 기사 모아보기(새 화면): 게시된 기사를 연도별 탭으로.
+  let newsYear=null,fromMain=false;
+  function renderArchive(){
+    const own=!!ls("jwToken"),shown=liveNews().filter(isOk);
+    const years=[...new Set(shown.map(x=>new Date(x.date).getFullYear()).filter(y=>!isNaN(y)))].sort((a,b)=>b-a);
+    if(!years.includes(newsYear))newsYear=years[0];
+    $("newsYears").innerHTML=years.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===newsYear}">${y} <span style="opacity:.6">${shown.filter(x=>new Date(x.date).getFullYear()===y).length}</span></button>`).join("");
+    $("newsAllList").innerHTML=shown.filter(x=>new Date(x.date).getFullYear()===newsYear).map(x=>newsItem(x,own)).join("")||'<li>이 해의 기사가 없어요.</li>';
+  }
+  $("newsYears").addEventListener("click",e=>{const b=e.target.closest("[data-y]");if(b){newsYear=+b.dataset.y;renderArchive();}});
+  function route(){
+    const on=location.hash==="#news";
+    document.body.classList.toggle("on-news",on);$("newsPage").hidden=!on;
+    if(on){renderArchive();scrollTo(0,0);}
+  }
+  addEventListener("hashchange",route);
+  $("newsMore").onclick=()=>{fromMain=true;location.hash="news";};
+  $("newsBack").onclick=()=>{if(fromMain)history.back();else location.hash="";};
   async function newsEdit(inputs,done){
     try{
       const r=await fetch("https://api.github.com/repos/kmj-spec/jw4-record/actions/workflows/update.yml/dispatches",{method:"POST",headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+ls("jwToken")},body:JSON.stringify({ref:"main",inputs})});
       $("refreshMsg").textContent=r.ok?done+" 1~2분 뒤 모든 화면에 반영돼요.":"이 기기에만 반영됐어요. 서버 반영은 실패했어요("+r.status+").";
     }catch(e){$("refreshMsg").textContent="이 기기에만 반영됐어요. 인터넷 연결을 확인해 주세요.";}
   }
-  $("newsSec").addEventListener("click",e=>{
+  const onNewsClick=e=>{
     const h=e.target.closest("[data-hide]"),o=e.target.closest("[data-ok]");
     if(h){const t=h.dataset.hide;if(!confirm(`이 기사를 목록에서 뺄까요?\n\n${t}`))return;hiddenNews.add(nkey(t));keep("jwNewsHide",hiddenNews);renderNews();newsEdit({hide:t},"기사를 뺐어요.");}
     if(o){const t=o.dataset.ok;okNews.add(nkey(t));keep("jwNewsOk",okNews);renderNews();newsEdit({approve:t},"기사를 게시했어요.");}
-  });
+  };
+  $("newsSec").addEventListener("click",onNewsClick);$("newsArch").addEventListener("click",onNewsClick);
   async function loadNews(){
     try{const d=await fetch("news.json?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();});news=(d.items||[]).filter(x=>x.title&&/^https?:/.test(x.link||""));}catch(e){}
-    renderNews();
+    renderNews();route();
   }
 
   // 접는 칸: 펼친 칸은 이 기기에 기억한다.

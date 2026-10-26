@@ -63,5 +63,10 @@ const items = all
   });
 
 if (!items.length) { console.log("받은 기사가 없어요. 기존 news.json을 그대로 둡니다."); process.exit(0); }
+// 한 번 게시한 기사는 검색 결과에서 밀려나도 계속 보관한다(기사 모아보기의 연도별 목록용).
+const fresh = new Set(items.map(x => key(x.title)));
+for (const x of prev.values())
+  if ((x.ok || approved.has(key(x.title))) && !fresh.has(key(x.title)) && !hidden.has(key(x.title))) items.push({ ...x, ok: true });
+items.sort((a, b) => (a.date < b.date ? 1 : -1));
 fs.writeFileSync("news.json", JSON.stringify({ items }, null, 1) + "\n");
 console.log(`기사 ${items.length}개`, items.slice(0, 3).map(x => `${x.date.slice(0, 10)} ${x.title}`).join(" / "));
