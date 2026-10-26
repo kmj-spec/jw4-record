@@ -130,6 +130,11 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .fh::after{content:"⌄";margin-left:auto;font-size:16px;line-height:1;letter-spacing:0;transform:translateY(-3px);transition:transform .15s}
 .fh[aria-expanded="true"]::after{transform:translateY(2px) rotate(180deg)}
 .fold .thead h2{flex:1}
+/* 제목 줄에 버튼(누적/평균)이 있는 칸은 접기 표시를 버튼 오른쪽 끝에 둔다 */
+.thead .fh::after{display:none}
+.fchev{border:0;background:none;padding:0 0 0 4px;color:var(--muted);cursor:pointer}
+.fchev::after{content:"⌄";display:inline-block;font-size:16px;line-height:1;transform:translateY(-3px);transition:transform .15s}
+.fold.open .fchev::after{transform:translateY(2px) rotate(180deg)}
 .fold:not(.open) > :not(h2):not(.thead), .fold:not(.open) .seg{display:none}
 .fold:not(.open) h2, .fold:not(.open) .thead{margin-bottom:0}
 .fold{border-top:1px solid var(--line);padding-top:14px}
@@ -236,6 +241,7 @@ body.on-news > .wrap:not(#newsPage){display:none}
         <button type="button" id="mSum" aria-pressed="true">누적</button>
         <button type="button" id="mAvg" aria-pressed="false">평균</button>
       </div>
+      <button type="button" class="fchev" tabindex="-1" aria-hidden="true"></button>
     </div>
     <div class="scroll"><table id="tbl"></table></div>
   </section>
@@ -421,6 +427,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 
   // 접는 칸: 펼친 칸은 이 기기에 기억한다.
   const openSet=new Set((()=>{try{return JSON.parse(localStorage.getItem("jwOpen")||"[]")}catch(e){return []}})());
+  document.querySelectorAll(".fchev").forEach(c=>c.onclick=()=>c.closest("section").querySelector(".fh").click());
   document.querySelectorAll("section.fold").forEach(sec=>{
     const b=sec.querySelector(".fh"),set=o=>{sec.classList.toggle("open",o);b.setAttribute("aria-expanded",o);};
     set(openSet.has(sec.id));
