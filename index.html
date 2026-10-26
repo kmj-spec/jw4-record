@@ -364,7 +364,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const keep=(k,s)=>{try{localStorage.setItem(k,JSON.stringify([...s]))}catch(e){}};
   // N: 목록에 들어온 지 48시간 안 + 발행된 지 3일 안 된 기사(옛 기사가 검색에 새로 잡힌 경우는 제외).
   const isNew=x=>{const a=Date.parse(x.added||""),p=Date.parse(x.date||"");return Date.now()-a<48*3600e3&&a-p<72*3600e3;};
-  const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}`;};
+  const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`;};
   const isOk=x=>x.ok!==false||okNews.has(nkey(x.title));
   const liveNews=()=>news.filter(x=>!hiddenNews.has(nkey(x.title)));
   const newsItem=(x,own)=>`<li${own?' class="own"':""}><a href="${esc(x.link)}" target="_blank" rel="noopener">${isNew(x)?'<span class="nb" aria-label="새 기사">N</span>':""}${esc(x.title)}</a><div class="src">${esc(x.source||"")}${x.source?" · ":""}${md(x.date)}</div>${own?`<button type="button" class="x" data-hide="${esc(x.title)}" aria-label="이 기사 빼기">×</button>`:""}</li>`;
