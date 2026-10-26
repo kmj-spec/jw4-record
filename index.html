@@ -81,7 +81,7 @@ h2{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin
 .cell .k{font-size:12px;color:var(--muted)}
 .cell .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
 .cell .s{font-size:11px;font-family:var(--mono);color:var(--muted)}
-.cell .s.up{color:var(--up)}.cell .s.down{color:var(--down)}
+.cell .s.up{color:var(--up)}.cell .s.down{color:var(--muted)}
 .cell.key .v{color:var(--red)}
 @media (max-width:520px){.board{grid-template-columns:repeat(2,1fr)}.cell:nth-child(4n){border-right:1px solid var(--line)}.cell:nth-child(2n){border-right:0}.cell:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.cell:nth-last-child(-n+2){border-bottom:0}.cell .v{font-size:22px}}
 
@@ -290,7 +290,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     const best={pts:mx("pts"),reb:Math.max(...gs.map(g=>n(g.oreb)+n(g.dreb))),ast:mx("ast"),stl:mx("stl")};
     const bg=gs.find(g=>n(g.pts)===best.pts);
     const dbl=gs.filter(g=>n(g.pts)>=10).length;
-    $("gSum").innerHTML=`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp}) · 두 자릿수 득점 <b>${dbl}</b>경기 · 최다 스틸 <b>${best.stl}</b>`;
+    // 0인 항목은 보여 주지 않는다.
+    $("gSum").innerHTML=[best.pts?`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp})`:"",dbl?`두 자릿수 득점 <b>${dbl}</b>경기`:"",best.stl?`최다 스틸 <b>${best.stl}</b>`:""].filter(Boolean).join(" · ");
     const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"],["+/-","득실마진"]];
     const c=(v,b)=>`<td${b&&v===b&&v>0?' class="best"':""}>${v}</td>`;
     $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+(gAll?gs:gs.slice(0,GN)).map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
