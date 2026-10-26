@@ -503,7 +503,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     if(vals.every(x=>x===null))return;
     const max=Math.max(...vals.map(x=>x||0),1);
     // 오늘 방문자 수 + 최근 7일 막대(막대마다 숫자)
-    $("visits").innerHTML=`오늘 방문 <b>${vals[6]||0}</b> · 어플 <b>${appToday||0}</b>`+
+    $("visits").innerHTML=`오늘 방문 <b>${vals[6]||0}</b> · 앱 <b>${appToday||0}</b>`+
       `<div class="spark">${vals.map(x=>`<div class="c"><i>${x||0}</i><span style="height:${Math.round((x||0)/max*18)}px"></span></div>`).join("")}</div>`+
       `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
     $("visits").hidden=false;
