@@ -95,7 +95,11 @@ table.gtbl{min-width:760px}
 td.best{color:var(--red);font-weight:700}
 .gsum{font-size:13px;color:var(--muted);margin:-2px 0 10px;line-height:1.6}
 .gsum b{color:var(--ink);font-family:var(--mono)}
-th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
+th .ko{display:none;font-size:10px;letter-spacing:0;margin-top:2px;opacity:.85}
+body.showko th .ko{display:block}
+th:not(:first-child),td:not(:first-child){text-align:center}
+.help{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:6px;padding:0;border:1px solid var(--muted);border-radius:50%;background:transparent;color:var(--muted);font:700 11px/1 var(--body);vertical-align:1px;cursor:pointer}
+.help[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .foot{font-size:12px;color:var(--muted);line-height:1.6}
 .empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:28px 18px;text-align:center;color:var(--muted)}
 </style>
@@ -142,7 +146,6 @@ th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
       </div>
     </div>
     <div class="scroll"><table id="tbl"></table></div>
-    <p class="foot" style="margin:8px 0 0">시즌을 누르면 아래에 그 시즌 경기별 기록이 나와요.</p>
   </section>
 
   <section id="gameSec" hidden>
@@ -162,6 +165,8 @@ th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
   const $=id=>document.getElementById(id);
   let seasons=[], meta={}, mode="sum", logs={}, gSel=null;
   const n=v=>Number(v)||0;
+  const help=()=>`<button type="button" class="help" aria-label="영어 약자 한글 뜻 보기" aria-pressed="${document.body.classList.contains("showko")}">?</button>`;
+  document.addEventListener("click",e=>{if(!e.target.closest(".help"))return;e.stopPropagation();const on=document.body.classList.toggle("showko");document.querySelectorAll(".help").forEach(b=>b.setAttribute("aria-pressed",on));},true);
   const secs=s=>{const [m,ss]=String(s||"0:00").split(":").map(Number);return (m||0)*60+(ss||0);};
   const mmss=x=>`${Math.floor(x/60)}:${String(Math.round(x%60)).padStart(2,"0")}`;
   const pct=(m,a)=>a?(m/a*100).toFixed(1):"–";
@@ -206,7 +211,7 @@ th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
       return `<tr class="${cls||""}"><td>${label}</td><td>${g}</td><td>${s.w}-${s.l}</td><td>${a?mmss(s.sec/g):mmss(s.sec)}</td><td><b>${v("pts")}</b></td><td>${mt("m2","a2")}</td><td>${pct(s.m2,s.a2)}</td><td>${mt("m3","a3")}</td><td>${pct(s.m3,s.a3)}</td><td>${mt("fgm","fga")}</td><td>${pct(s.fgm,s.fga)}</td><td>${mt("ftm","fta")}</td><td>${pct(s.ftm,s.fta)}</td><td>${v("oreb")}</td><td>${v("dreb")}</td><td>${v("reb")}</td><td>${v("ast")}</td><td>${v("stl")}</td><td>${v("blk")}</td><td>${v("gd")}</td><td>${v("dk")}</td><td>${v("to")}</td><td>${v("pf")}</td><td>${v("pp")}</td><td>${a?pg(s.pm,g):(s.pm>0?"+":"")+s.pm}</td></tr>`;};
     const tot=sum(seasons);
     if(!gSel)gSel=cur.season;
-    $("tbl").innerHTML=`<thead><tr>${head.map(([en,ko])=>`<th>${en}${ko?`<span class="ko">(${ko})</span>`:""}</th>`).join("")}</tr></thead><tbody>${list.map(s=>row(s,s.season,(s===cur?"cur ":"")+"pick"+(s.season===gSel?" sel":"")).replace("<tr ",`<tr data-s="${s.season}" `)).join("")}</tbody><tfoot>${row(tot,"통산")}</tfoot>`;
+    $("tbl").innerHTML=`<thead><tr>${head.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>${list.map(s=>row(s,s.season,(s===cur?"cur ":"")+"pick"+(s.season===gSel?" sel":"")).replace("<tr ",`<tr data-s="${s.season}" `)).join("")}</tbody><tfoot>${row(tot,"통산")}</tfoot>`;
     renderGames(list.map(s=>s.season));
   }
 
@@ -224,7 +229,7 @@ th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
     $("gSum").innerHTML=`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp}) · 두 자릿수 득점 <b>${dbl}</b>경기 · 최다 스틸 <b>${best.stl}</b>`;
     const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"],["+/-","득실마진"]];
     const c=(v,b)=>`<td${b&&v===b&&v>0?' class="best"':""}>${v}</td>`;
-    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko])=>`<th>${en}${ko?`<span class="ko">(${ko})</span>`:""}</th>`).join("")}</tr></thead><tbody>`+gs.map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
+    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+gs.map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
   }
   function pickSeason(s,scroll){gSel=s;render();if(scroll){try{$("gameSec").scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}}}
   $("tbl").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr)pickSeason(tr.dataset.s,true);});
