@@ -21,7 +21,7 @@ async function search(q) {
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(([, it]) => {
     const source = tag(it, "source");
     let title = tag(it, "title");
-    if (source && title.endsWith(" - " + source)) title = title.slice(0, -(source.length + 3));
+    while (source && title.endsWith(" - " + source)) title = title.slice(0, -(source.length + 3));
     const desc = tag(it, "description").replace(/<[^>]+>/g, " ");
     return { title, source, link: tag(it, "link"), date: new Date(tag(it, "pubDate")).toISOString(), text: title + " " + desc };
   });
