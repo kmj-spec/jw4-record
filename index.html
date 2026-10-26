@@ -276,7 +276,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     $("careerTitle").textContent=`통산 누적 · ${list[list.length-1].season.slice(0,4)}년 데뷔 이후 정규시즌`;
     $("careerBoard").innerHTML=[
       ["경기",T.g,`${T.w}승 ${T.l}패`],["득점",T.pts,`2점 ${T.m2} · 3점 ${T.m3} · 자유투 ${T.ftm}`,1],["리바운드",T.reb,`공격 ${T.oreb} · 수비 ${T.dreb}`],["어시스트",T.ast,`경기당 ${pg(T.ast,T.g)}`],
-      ["스틸",T.stl,`경기당 ${pg(T.stl,T.g)}`],["블록",T.blk,`굿디펜스 ${T.gd}`],["3점슛 성공",T.m3,`${T.a3}개 시도 · ${pct(T.m3,T.a3)}%`],["출전시간",mmss(T.sec),`득실마진 ${T.pm>0?"+":""}${T.pm}`]
+      ["스틸",T.stl,`경기당 ${pg(T.stl,T.g)}`],["블록",T.blk,`굿디펜스 ${T.gd}`],["3점슛 성공",T.m3,`${T.a3}개 시도 · ${pct(T.m3,T.a3)}%`],["출전시간",mmss(T.sec),`경기당 ${mmss(T.sec/T.g)}`]
     ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join("");
     const m=String(meta.lastCheck||meta.updatedAt||"").match(/(\d{4})\.(\d\d)\.(\d\d)(?: (\d\d:\d\d))?/);
     $("updated").textContent=m?`업데이트 ${m[1]}. ${m[2]}. ${m[3]}.${m[4]?" "+m[4]:""}`:"";
@@ -288,7 +288,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     const minDiff=()=>{if(!prev||!prev.g)return "";const d=cur.sec/cur.g-prev.sec/prev.g;return `<div class="s ${d>0?"up":"down"}">지난 시즌 대비 ${d>0?"+":"−"}${mmss(Math.abs(d))}</div>`;};
     $("board").innerHTML=[
       ["득점",pg(cur.pts,cur.g),diff("pts"),1],["리바운드",pg(cur.reb,cur.g),diff("reb")],["어시스트",pg(cur.ast,cur.g),diff("ast")],["스틸",pg(cur.stl,cur.g),diff("stl")],
-      ["출전시간",mmss(cur.sec/cur.g),minDiff()],["야투율",pct(cur.fgm,cur.fga)+"%",pd("fgm","fga")],["3점 성공률",pct(cur.m3,cur.a3)+"%",pd("m3","a3")],["득실마진 (+/-)",(cur.pm>0?"+":"")+cur.pm,`<div class="s">시즌 누적</div>`]
+      ["출전시간",mmss(cur.sec/cur.g),minDiff()],["야투율",pct(cur.fgm,cur.fga)+"%",pd("fgm","fga")],["3점 성공률",pct(cur.m3,cur.a3)+"%",pd("m3","a3")],["3점슛 성공",cur.m3,`<div class="s">시즌 누적</div>`]
     ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div>${c[2]}</div>`).join("");
 
     const asc=list.slice().reverse();
@@ -296,9 +296,9 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     $("growth").innerHTML=charts.map(([lab,f])=>{const vals=asc.map(s=>s.g?s[f]/s.g:0),max=Math.max(...vals,0.1);
       return `<div class="gchart"><div class="t">${lab}</div>`+asc.map((s,i)=>`<div class="bar${s===cur?" cur":""}"><span class="lab">${s.season.slice(2,4)}-${s.season.slice(-2)}</span><span class="track"><span class="fill" style="width:${vals[i]/max*100}%;display:block"></span></span><span class="val">${vals[i].toFixed(1)}</span></div>`).join("")+`</div>`;}).join("");
 
-    const head=[["시즌",""],["G","경기"],["W-L","승-패"],["MIN","출전시간"],["PTS","득점"],["2P","2점 성공-시도"],["2P%","2점 성공률"],["3P","3점 성공-시도"],["3P%","3점 성공률"],["FG","야투 성공-시도"],["FG%","야투율"],["FT","자유투 성공-시도"],["FT%","자유투율"],["OREB","공격 리바"],["DREB","수비 리바"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["GD","굿디펜스"],["DK","덩크"],["TO","턴오버"],["PF","파울"],["PP","페인트존 성공"],["+/-","득실마진"]];
+    const head=[["시즌",""],["G","경기"],["W-L","승-패"],["MIN","출전시간"],["PTS","득점"],["2P","2점 성공-시도"],["2P%","2점 성공률"],["3P","3점 성공-시도"],["3P%","3점 성공률"],["FG","야투 성공-시도"],["FG%","야투율"],["FT","자유투 성공-시도"],["FT%","자유투율"],["OREB","공격 리바"],["DREB","수비 리바"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["GD","굿디펜스"],["DK","덩크"],["TO","턴오버"],["PF","파울"],["PP","페인트존 성공"]];
     const row=(s,label,cls)=>{const a=mode==="avg",g=s.g,v=f=>a?pg(s[f],g):s[f],mt=(m,at)=>a?`${pg(s[m],g)}-${pg(s[at],g)}`:`${s[m]}-${s[at]}`;
-      return `<tr class="${cls||""}"><td>${label}</td><td>${g}</td><td>${s.w}-${s.l}</td><td>${a?mmss(s.sec/g):mmss(s.sec)}</td><td><b>${v("pts")}</b></td><td>${mt("m2","a2")}</td><td>${pct(s.m2,s.a2)}</td><td>${mt("m3","a3")}</td><td>${pct(s.m3,s.a3)}</td><td>${mt("fgm","fga")}</td><td>${pct(s.fgm,s.fga)}</td><td>${mt("ftm","fta")}</td><td>${pct(s.ftm,s.fta)}</td><td>${v("oreb")}</td><td>${v("dreb")}</td><td>${v("reb")}</td><td>${v("ast")}</td><td>${v("stl")}</td><td>${v("blk")}</td><td>${v("gd")}</td><td>${v("dk")}</td><td>${v("to")}</td><td>${v("pf")}</td><td>${v("pp")}</td><td>${a?pg(s.pm,g):(s.pm>0?"+":"")+s.pm}</td></tr>`;};
+      return `<tr class="${cls||""}"><td>${label}</td><td>${g}</td><td>${s.w}-${s.l}</td><td>${a?mmss(s.sec/g):mmss(s.sec)}</td><td><b>${v("pts")}</b></td><td>${mt("m2","a2")}</td><td>${pct(s.m2,s.a2)}</td><td>${mt("m3","a3")}</td><td>${pct(s.m3,s.a3)}</td><td>${mt("fgm","fga")}</td><td>${pct(s.fgm,s.fga)}</td><td>${mt("ftm","fta")}</td><td>${pct(s.ftm,s.fta)}</td><td>${v("oreb")}</td><td>${v("dreb")}</td><td>${v("reb")}</td><td>${v("ast")}</td><td>${v("stl")}</td><td>${v("blk")}</td><td>${v("gd")}</td><td>${v("dk")}</td><td>${v("to")}</td><td>${v("pf")}</td><td>${v("pp")}</td></tr>`;};
     const tot=sum(seasons);
     if(!gSel)gSel=cur.season;
     $("tbl").innerHTML=`<thead><tr>${head.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>${list.map(s=>row(s,s.season,(s===cur?"cur ":"")+"pick"+(s.season===gSel?" sel":"")).replace("<tr ",`<tr data-s="${s.season}" `)).join("")}</tbody><tfoot>${row(tot,"통산")}</tfoot>`;
@@ -320,9 +320,9 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     const dbl=gs.filter(g=>n(g.pts)>=10).length;
     // 0인 항목은 보여 주지 않는다.
     $("gSum").innerHTML=[best.pts?`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp})`:"",dbl?`두 자릿수 득점 <b>${dbl}</b>경기`:"",best.stl?`최다 스틸 <b>${best.stl}</b>`:""].filter(Boolean).join(" · ");
-    const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"],["+/-","득실마진"]];
+    const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"]];
     const c=(v,b)=>`<td${b&&v===b&&v>0?' class="best"':""}>${v}</td>`;
-    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+(gAll?gs:gs.slice(0,GN)).map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
+    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+(gAll?gs:gs.slice(0,GN)).map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td></tr>`;}).join("")+`</tbody>`;
   }
   function pickSeason(s,scroll){gSel=s;render();if(scroll){try{$("gameSec").scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}}}
   $("tbl").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr)pickSeason(tr.dataset.s,true);});
