@@ -136,7 +136,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .news{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:10px}
 .news li{padding:12px 14px;border-bottom:1px solid var(--line)}
 .news li:last-child{border-bottom:0}
-.news a{color:var(--ink);text-decoration:none;font-size:14px;line-height:1.5;display:block}
+.news a{color:var(--ink);text-decoration:none;font-size:14px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 .news a:hover{text-decoration:underline}
 .news .src{font-size:11px;color:var(--muted);margin-top:3px}
 .news li{position:relative}
