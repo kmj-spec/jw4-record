@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 15 * * *" # 매일 한국 시간 자정(UTC 15:00)
   workflow_dispatch:
+    inputs:
+      hide:
+        description: "목록에서 뺄 기사 제목 (앱의 × 버튼이 채움)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -24,6 +29,11 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: node scripts/fetch.mjs
+      - name: 뺄 기사 적기
+        if: ${{ inputs.hide != '' }}
+        run: node scripts/hide.mjs
+        env:
+          HIDE: ${{ inputs.hide }}
       - name: 관련 기사 받기
         run: node scripts/news.mjs
         continue-on-error: true
@@ -33,6 +43,7 @@ jobs:
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add data.json
           [ -f news.json ] && git add news.json
+          [ -f news-hide.json ] && git add news-hide.json
           git diff --cached --quiet && { echo "바뀐 내용 없음"; exit 0; }
           git commit -m "기록 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
           git push

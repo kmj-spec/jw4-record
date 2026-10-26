@@ -7,6 +7,12 @@ const QUERIES = ["박정웅 정관장", "박정웅 농구", "박정웅 KBL"];
 const MUST = /박정웅/;
 const ALSO = /정관장|농구|KBL|프로농구|안양|가드|드래프트|D리그/;
 const KEEP = 20;
+const key = t => t.replace(/\s+/g, "");
+// 사용자가 앱에서 × 로 뺀 기사(제목 기준). 다시 받아와도 넣지 않는다.
+const hidden = new Set(fs.existsSync("news-hide.json") ? JSON.parse(fs.readFileSync("news-hide.json", "utf8")).titles || [] : []);
+// 처음 들어온 시각(added)을 기억해 두었다가 화면에서 48시간 동안 N 표시를 한다.
+const prev = new Map((fs.existsSync("news.json") ? JSON.parse(fs.readFileSync("news.json", "utf8")).items || [] : []).map(x => [key(x.title), x]));
+const now = new Date().toISOString();
 
 const unescape = s => s
   .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -36,9 +42,12 @@ const seen = new Set();
 const items = all
   .filter(x => MUST.test(x.text) && ALSO.test(x.text) && x.link && !Number.isNaN(Date.parse(x.date)))
   .sort((a, b) => (a.date < b.date ? 1 : -1))
-  .filter(x => { const k = x.title.replace(/\s+/g, ""); if (seen.has(k)) return false; seen.add(k); return true; })
+  .filter(x => { const k = key(x.title); if (seen.has(k) || hidden.has(k)) return false; seen.add(k); return true; })
   .slice(0, KEEP)
-  .map(({ title, source, link, date }) => ({ title, source, link, date }));
+  .map(({ title, source, link, date }) => {
+    const old = prev.get(key(title));
+    return { title, source, link, date, added: old ? (old.added || old.date) : (prev.size ? now : date) };
+  });
 
 if (!items.length) { console.log("받은 기사가 없어요. 기존 news.json을 그대로 둡니다."); process.exit(0); }
 fs.writeFileSync("news.json", JSON.stringify({ items }, null, 1) + "\n");
