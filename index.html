@@ -468,7 +468,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const preview=location.hash==="#popup";
   if(preview)history.replaceState(null,"",location.pathname+location.search);
   function showInstall(force){
-    if(!preview&&(standalone||!(ios||android)))return;
+    // 인스타그램·카카오톡 같은 앱 속 브라우저는 설치된 앱일 수 없으므로 "설치됨" 판단을 무시한다.
+    if(!preview&&((standalone&&!inApp)||!(ios||android)))return;
     $("instLink").hidden=false;
     let closed=false;try{closed=!!sessionStorage.getItem("jwInstallClosed")}catch(e){}
     if(!force&&!preview&&(Date.now()<Number(store.get("jwInstallUntil")||0)||closed))return;
