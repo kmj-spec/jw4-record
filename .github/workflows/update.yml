@@ -2,7 +2,7 @@ name: 정웅이 기록 자동 갱신
 
 on:
   schedule:
-    - cron: "0 15 * * *" # 매일 한국 시간 자정(UTC 15:00)
+    - cron: "7 13 * * *" # 매일 한국 시간 22시 7분(UTC 13:07). 정각은 GitHub 예약이 몰려 늦어지므로 7분으로 비킴
   workflow_dispatch:
     inputs:
       hide:
