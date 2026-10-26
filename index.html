@@ -69,6 +69,7 @@ button{cursor:pointer}
 .sheet .note{font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.6}
 .sheet .go{display:block;width:100%;border:0;border-radius:10px;background:var(--red);color:#fff;font-weight:700;font-size:15px;padding:12px;margin-bottom:10px;cursor:pointer;text-align:center;text-decoration:none}
 .sheet .row{display:flex;justify-content:space-between}
+.sheet .row span{display:flex;gap:14px}
 .sheet .row button{border:0;background:none;color:var(--muted);font-size:13px;padding:6px 2px;cursor:pointer}
 @media (min-width:600px){.modal{place-items:center}}
 
@@ -194,7 +195,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
   <div class="sheet">
     <div class="top"><img src="icons/icon-192.png" alt=""><h3 id="instTitle">앱으로 설치하기</h3></div>
     <div id="instBody"></div>
-    <div class="row"><button type="button" id="instNever">다시 보지 않기</button><button type="button" id="instClose">닫기</button></div>
+    <div class="row"><span><button type="button" data-days="1">하루 동안 보지 않기</button> <button type="button" data-days="7">일주일간 보지 않기</button></span><button type="button" id="instClose">닫기</button></div>
   </div>
 </div>
 
@@ -336,18 +337,21 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     if(deferred)return `<button type="button" class="go" id="instGo">설치하기</button>`;
     return `<ol><li>오른쪽 위 <b>⋮</b> 메뉴 클릭</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b> 클릭</li><li><b>설치</b> 클릭</li></ol>`;
   }
+  // 주소 끝에 #popup 을 붙여 열면 앱 안·PC에서도 안내 팝업을 미리 볼 수 있다.
+  const preview=location.hash==="#popup";
+  if(preview)history.replaceState(null,"",location.pathname+location.search);
   function showInstall(force){
-    if(standalone||!(ios||android))return;
+    if(!preview&&(standalone||!(ios||android)))return;
     $("instLink").hidden=false;
     let closed=false;try{closed=!!sessionStorage.getItem("jwInstallClosed")}catch(e){}
-    if(!force&&(store.get("jwInstallHide")||closed))return;
+    if(!force&&!preview&&(Date.now()<Number(store.get("jwInstallUntil")||0)||closed))return;
     $("instBody").innerHTML=installBody();
     const go=$("instGo");if(go)go.onclick=async()=>{deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$("instModal").hidden=true;};
     $("instModal").hidden=false;
   }
   $("instLink").onclick=()=>showInstall(true);
   $("instClose").onclick=()=>{$("instModal").hidden=true;try{sessionStorage.setItem("jwInstallClosed","1")}catch(e){}};
-  $("instNever").onclick=()=>{$("instModal").hidden=true;store.set("jwInstallHide","1");};
+  document.querySelectorAll("#instModal [data-days]").forEach(b=>b.onclick=()=>{$("instModal").hidden=true;store.set("jwInstallUntil",String(Date.now()+Number(b.dataset.days)*864e5));});
   $("instModal").addEventListener("click",e=>{if(e.target===$("instModal"))$("instClose").click();});
 })();
 </script>
