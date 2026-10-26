@@ -1,0 +1,12 @@
+name: counter-test
+on: workflow_dispatch
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          B=https://abacus.jasoncameron.dev
+          echo "get-missing:"; curl -s -w " [%{http_code}]\n" $B/get/winningwoong-jw4/test-key
+          echo "hit:"; curl -s -w " [%{http_code}]\n" $B/hit/winningwoong-jw4/test-key
+          echo "get:"; curl -s -w " [%{http_code}]\n" $B/get/winningwoong-jw4/test-key
+          echo "cors:"; curl -s -D - -o /dev/null -H "Origin: https://winningwoong.vercel.app" $B/get/winningwoong-jw4/test-key | grep -i access-control
