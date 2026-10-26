@@ -7,6 +7,17 @@ const QUERIES = ["박정웅 정관장", "박정웅 농구", "박정웅 KBL"];
 const MUST = /박정웅/;
 const ALSO = /정관장|농구|KBL|프로농구|안양|가드|드래프트|D리그/;
 const KEEP = 20;
+// 팬 사이트·블로그·커뮤니티 글은 받지 않는다. 아래 언론사 이름이 들어간 출처만 남긴다.
+// 새 언론사를 추가하려면 이 목록에 이름을 넣으면 된다.
+const PRESS = [
+  "점프볼", "루키", "바스켓코리아", "연합뉴스", "뉴시스", "뉴스1", "스포츠조선", "스포츠서울", "스포츠동아", "스포츠경향",
+  "스포츠월드", "스포츠한국", "스포탈코리아", "스포티비", "SPOTV", "엑스포츠", "OSEN", "마이데일리", "일간스포츠", "STN",
+  "MK스포츠", "매일경제", "한국경제", "머니투데이", "스타뉴스", "조이뉴스", "더게이트", "인터풋볼", "베스트일레븐", "데일리안",
+  "조선일보", "중앙일보", "동아일보", "한겨레", "경향신문", "국민일보", "서울신문", "세계일보", "한국일보", "문화일보",
+  "헤럴드경제", "아시아경제", "이데일리", "파이낸셜뉴스", "서울경제", "노컷뉴스", "뉴스핌", "아이뉴스24", "서울Pn",
+  "KBS", "MBC", "SBS", "JTBC", "YTN", "MBN", "경기일보", "인천일보", "경인일보", "중부일보", "기호일보",
+];
+const isPress = s => PRESS.some(p => s.toLowerCase().includes(p.toLowerCase()));
 const key = t => t.replace(/\s+/g, "");
 // 사용자가 앱에서 × 로 뺀 기사(제목 기준). 다시 받아와도 넣지 않는다.
 const hidden = new Set(fs.existsSync("news-hide.json") ? JSON.parse(fs.readFileSync("news-hide.json", "utf8")).titles || [] : []);
@@ -40,7 +51,7 @@ for (const q of QUERIES) {
 }
 const seen = new Set();
 const items = all
-  .filter(x => MUST.test(x.text) && ALSO.test(x.text) && x.link && !Number.isNaN(Date.parse(x.date)))
+  .filter(x => MUST.test(x.text) && ALSO.test(x.text) && isPress(x.source) && x.link && !Number.isNaN(Date.parse(x.date)))
   .sort((a, b) => (a.date < b.date ? 1 : -1))
   .filter(x => { const k = key(x.title); if (seen.has(k) || hidden.has(k)) return false; seen.add(k); return true; })
   .slice(0, KEEP)
