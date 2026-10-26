@@ -155,12 +155,12 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .news .x:hover{background:var(--line)}
 .more{display:block;width:100%;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;padding:8px;cursor:pointer}
 #foot{font-size:10px;letter-spacing:.02em}
-.visits{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted)}
-.visits b{color:var(--ink);font-family:var(--mono)}
-.visits .spark{display:flex;align-items:flex-end;gap:4px;height:28px;margin-top:8px}
-.visits .spark span{flex:1;background:var(--line);border-radius:2px;min-height:2px}
-.visits .spark span:last-child{background:var(--red)}
-.visits .days{display:flex;gap:4px;margin-top:3px;font-size:9px;font-family:var(--mono)}
+.visits{border:1px dashed var(--line);border-radius:8px;padding:6px 8px;font-size:10px;color:var(--muted);max-width:240px}
+.visits b{color:var(--muted);font-family:var(--mono)}
+.visits .spark{display:flex;align-items:flex-end;gap:2px;height:14px;margin-top:4px}
+.visits .spark span{flex:1;background:var(--line);border-radius:1px;min-height:1px}
+.visits .spark span:last-child{background:var(--muted)}
+.visits .days{display:flex;gap:2px;margin-top:2px;font-size:8px;font-family:var(--mono)}
 .visits .days span{flex:1;text-align:center}
 .credit{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:28px 0 8px;font-family:var(--body);font-size:10px;letter-spacing:.02em}
 .credit span{grid-column:2;color:var(--muted);opacity:.6}
@@ -433,7 +433,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     const [total,...vals]=await Promise.all([get("total"),...days.map(d=>get("d-"+d))]);
     if(total===null)return;
     const max=Math.max(...vals,1),v=i=>vals[i]||0;
-    $("visits").innerHTML=`방문자 · 오늘 <b>${v(6)}</b> · 어제 <b>${v(5)}</b> · 누적 <b>${total}</b> <span style="opacity:.6">(나만 보여요)</span>`+
+    $("visits").innerHTML=`방문자 · 오늘 <b>${v(6)}</b> · 어제 <b>${v(5)}</b> · 누적 <b>${total}</b>`+
       `<div class="spark">${vals.map(x=>`<span style="height:${Math.round((x||0)/max*100)}%" title="${x||0}"></span>`).join("")}</div>`+
       `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
     $("visits").hidden=false;
