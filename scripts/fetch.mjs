@@ -78,6 +78,11 @@ const next = shape(raw);
 if (!next.seasons.length) throw new Error("받은 기록이 비어 있어요. 기존 data.json을 그대로 둡니다.");
 
 const prev = fs.existsSync("data.json") ? JSON.parse(fs.readFileSync("data.json", "utf8")) : {};
+// 안전장치: 이미 있던 시즌이 사라지거나 경기 수가 줄었으면 KBL 쪽 데이터가 잘못 온 것으로 보고 저장하지 않는다.
+for (const s of prev.seasons || []) {
+  const n = next.seasons.find(x => x.season === s.season);
+  if (!n || n.g < s.g) throw new Error(`${s.season} 기록이 ${s.g}경기 → ${n ? n.g : 0}경기로 줄었어요. 잘못 받은 것 같아 기존 data.json을 그대로 둡니다.`);
+}
 const changed = JSON.stringify({ s: prev.seasons, g: prev.gamelogs }) !== JSON.stringify({ s: next.seasons, g: next.gamelogs });
 const data = { updatedAt: changed ? today : (prev.updatedAt || today), lastCheck: now, lastResult: changed ? "새 기록 반영" : "변동 없음", ...next };
 fs.writeFileSync("data.json", JSON.stringify(data, null, 1) + "\n");
