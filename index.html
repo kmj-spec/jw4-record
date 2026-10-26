@@ -145,6 +145,10 @@ body.on-news > .wrap:not(#newsPage){display:none}
 .np-head h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;line-height:1}
 .back{border:0;background:none;padding:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
 #newsYears{align-self:flex-start}
+.pager{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.pager:empty{display:none}
+.pager button{min-width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+.pager button[aria-current="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:700}
 .pend{border:1px dashed var(--red);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--red-soft)}
 .pend .ph{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px}
 .pend .pi{padding:8px 0;border-top:1px solid var(--line)}
@@ -245,11 +249,11 @@ body.on-news > .wrap:not(#newsPage){display:none}
 <div class="wrap" id="newsPage" hidden>
   <header class="np-head">
     <button type="button" class="back" id="newsBack">← 돌아가기</button>
-    <h1>기사 모아보기</h1>
   </header>
   <div class="seg" role="group" aria-label="연도 선택" id="newsYears"></div>
   <section id="newsArch">
     <ul class="news" id="newsAllList"></ul>
+    <div class="pager" id="newsPager"></div>
   </section>
 </div>
 
@@ -375,15 +379,21 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     if(document.body.classList.contains("on-news"))renderArchive();
   }
   // 기사 모아보기(새 화면): 게시된 기사를 연도별 탭으로.
-  let newsYear=null,fromMain=false;
+  let newsYear=null,newsPg=0,fromMain=false;
+  const PER=10;
   function renderArchive(){
     const own=!!ls("jwToken"),shown=liveNews().filter(isOk);
     const years=[...new Set(shown.map(x=>new Date(x.date).getFullYear()).filter(y=>!isNaN(y)))].sort((a,b)=>b-a);
     if(!years.includes(newsYear))newsYear=years[0];
-    $("newsYears").innerHTML=years.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===newsYear}">${y} <span style="opacity:.6">${shown.filter(x=>new Date(x.date).getFullYear()===y).length}</span></button>`).join("");
-    $("newsAllList").innerHTML=shown.filter(x=>new Date(x.date).getFullYear()===newsYear).map(x=>newsItem(x,own)).join("")||'<li>이 해의 기사가 없어요.</li>';
+    $("newsYears").innerHTML=years.map(y=>`<button type="button" data-y="${y}" aria-pressed="${y===newsYear}">${y}</button>`).join("");
+    // 한 페이지에 10개, 넘치면 1 2 3 … 페이지 버튼
+    const list=shown.filter(x=>new Date(x.date).getFullYear()===newsYear),pages=Math.max(1,Math.ceil(list.length/PER));
+    newsPg=Math.min(newsPg,pages-1);
+    $("newsAllList").innerHTML=list.slice(newsPg*PER,newsPg*PER+PER).map(x=>newsItem(x,own)).join("")||'<li>이 해의 기사가 없어요.</li>';
+    $("newsPager").innerHTML=pages>1?Array.from({length:pages},(_,i)=>`<button type="button" data-pg="${i}" aria-current="${i===newsPg}">${i+1}</button>`).join(""):"";
   }
-  $("newsYears").addEventListener("click",e=>{const b=e.target.closest("[data-y]");if(b){newsYear=+b.dataset.y;renderArchive();}});
+  $("newsYears").addEventListener("click",e=>{const b=e.target.closest("[data-y]");if(b){newsYear=+b.dataset.y;newsPg=0;renderArchive();}});
+  $("newsPager").addEventListener("click",e=>{const b=e.target.closest("[data-pg]");if(b){newsPg=+b.dataset.pg;renderArchive();scrollTo(0,0);}});
   function route(){
     const on=location.hash==="#news";
     document.body.classList.toggle("on-news",on);$("newsPage").hidden=!on;

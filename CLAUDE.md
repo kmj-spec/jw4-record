@@ -5,7 +5,7 @@
 - 주소: Vercel 프로젝트 `winningwoong` → https://winningwoong.vercel.app (대학가자·자란다와 같은 Vercel 팀의 별도 프로젝트). `vercel.json`은 설치·빌드 없이 파일을 그대로 내보내는 설정. 예전 GitHub Pages 주소(kmj-spec.github.io/jw4-record)는 사용자 정보(kmj)가 보여 옮김.
 
 ## 구조
-- `index.html` — 페이지 하나. 순서: 통산 누적 → 이번 시즌 평균 → 최근 기사(5개, '더 보기' → 새 화면 `#news` '기사 모아보기': 연도별 탭) → 경기별 기록(최근 5경기, 더 보기) → 시즌별 성장(접힘) → 시즌별 기록표(접힘, 누적/평균). 펼친 칸은 기기에 기억(localStorage `jwOpen`). 시즌 표의 줄을 누르면 그 시즌 경기별 기록으로 바뀐다.
+- `index.html` — 페이지 하나. 순서: 통산 누적 → 이번 시즌 평균 → 최근 기사(5개, '더 보기' → 새 화면 `#news`: 연도별 탭, 한 페이지 10개·페이지 번호) → 경기별 기록(최근 5경기, 더 보기) → 시즌별 성장(접힘) → 시즌별 기록표(접힘, 누적/평균). 펼친 칸은 기기에 기억(localStorage `jwOpen`). 시즌 표의 줄을 누르면 그 시즌 경기별 기록으로 바뀐다.
 - `scripts/news.mjs` — 구글 뉴스 RSS에서 '박정웅'+농구 관련 말이 함께 있는 기사의 제목·언론사·날짜·링크만 받아 `news.json`(최근 20개)에 저장. 한 번 게시(ok)한 기사는 검색에서 밀려나도 계속 보관(연도별 모아보기용). 본문은 가져오지 않음. 출처가 `PRESS` 목록(언론사 이름)에 있는 기사만 받음(팬 사이트·블로그 제외). 실패하면 기존 파일 유지. 처음 들어온 시각 `added`를 기록해 화면에서 48시간 동안 빨간 N 표시(단, 발행 후 3일 안에 들어온 기사만). 새로 받은 기사는 `ok:false`(확인 대기)로 들어오고, 열쇠(`jwToken`)가 있는 기기에만 '확인 대기' 상자로 보임. 게시 → 워크플로 `approve` 입력 → `scripts/news-edit.mjs`가 `news-ok.json`에 적고 ok:true. 빼기·× → `hide` 입력 → `news-hide.json`에 적고 news.json에서 뺌(다시 안 들어옴). 두 목록 모두 공백 뺀 제목 기준. 방문자에게는 ok인 기사만 보임.
 - `data.json` — `{updatedAt, lastCheck, lastResult, seasons:[시즌별 누적], gamelogs:{시즌명:[경기별]}}`.
 - `scripts/fetch.mjs` — KBL 데이터 서버(kbl-api.sports2i.com)에서 기록을 받아 `data.json`을 갱신. 직접 호출이 막히면 Playwright로 kbl.or.kr을 열고 페이지 안에서 호출한다. 안전장치: 기존 시즌이 사라지거나 경기 수가 줄면 저장하지 않고 실패(기존 data.json 유지).
