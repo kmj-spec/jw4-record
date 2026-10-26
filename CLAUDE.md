@@ -17,6 +17,7 @@
 ## 데이터 서버 메모
 - 시즌 목록: `GET https://kbl-api.sports2i.com/api/v1/Common/recent-seasons?seriesCd=1`
 - 경기별 기록: `GET .../players/categories/game/{시즌코드}/{시즌코드-1}/291746` → `RegularGameRecords`
+- 시즌별 기록(선수 페이지 '시즌별' 탭): `GET .../players/categories/season/291746` → `RegularSeasonRecords`, `DLeageSeasonRecords`, `RegularSeasonPlayoffRecords`(플레이오프), `RegularSeasonChampionRecords`(챔프전) 등 (각각 Avgs·Sums 함께). 2026-10-26 기준 플레이오프·챔프전은 0건 → 사용자 요청: 실제로 플레이오프 기록이 생기면 그때 정규시즌과 따로 보여 주는 기능을 만든다. 경기별 주소(`categories/game`)에는 플레이오프 칸이 없음. D리그 경기별은 `DLeageGameRecords`(2025-26 D리그 8경기).
 - 시즌 코드: 2024-2025=45, 2025-2026=47, 2026-2027=49 (D리그는 짝수)
 - 필드: fg/fgA=2점 성공/시도, threep/threepA=3점, ft/ftA=자유투, oR/dR/aS/sT/bS/tO=공리/수리/어시/스틸/블록/턴오버, foulTot=파울, playSec=출전 초, margin=+/-, awayTeam=상대 팀코드
 - 팀코드: 06 수원 KT, 10 울산 현대모비스, 16 원주 DB, 35 서울 삼성, 50 창원 LG, 55 서울 SK, 60 부산 KCC, 64 대구 한국가스공사, 66 고양 소노, 70 안양 정관장
