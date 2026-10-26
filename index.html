@@ -44,7 +44,7 @@ button{cursor:pointer}
 .upd{display:flex;align-items:center;justify-content:flex-end;gap:12px;width:100%;order:-1;margin-bottom:-4px}
 .upd .info{display:flex;flex-direction:column;gap:2px;min-width:0}
 .upd .updated{font-family:var(--body);text-align:right;line-height:1.4}
-#updated{font-size:10px;opacity:.6}
+#updated,#autoUpd{font-size:10px;opacity:.6}
 .upd .updated span{display:block;white-space:nowrap}
 .refresh{flex-shrink:0}
 
@@ -179,6 +179,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
     <div class="upd">
       <div class="info">
         <div class="updated" id="updated">기록 불러오는 중…</div>
+        <div class="updated" id="autoUpd">자동 업데이트 매일 0시 0분</div>
         <div class="updated" id="refreshMsg" role="status"></div>
       </div>
       <button type="button" class="rf" id="rfBtn" aria-label="지금 업데이트" hidden>↻</button>
