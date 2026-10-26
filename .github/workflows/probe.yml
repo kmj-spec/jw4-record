@@ -7,11 +7,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm i playwright@1.48.2 >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: npm i playwright@1.48.2 >/dev/null 2>&1
       - run: |
           cat > p.mjs <<'JS'
           import { chromium } from "playwright";
-          const b = await chromium.launch(); const p = await b.newPage({ locale: "ko-KR" });
+          const b = await chromium.launch({ channel: "chrome" }); const p = await b.newPage({ locale: "ko-KR" });
           const seen = new Set();
           p.on("request", r => { const u = r.url(); if (u.includes("kbl-api") && !seen.has(u)) { seen.add(u); console.log("REQ", u); } });
           await p.goto("https://www.kbl.or.kr/player/player/291746", { waitUntil: "networkidle", timeout: 60000 });
