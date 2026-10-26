@@ -326,13 +326,16 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   const android=/Android/.test(ua);
   const inApp=/KAKAOTALK|Instagram|NAVER|FBAN|FBAV|Line\/|DaumApps|everytimeApp/i.test(ua);
+  // 설치는 안드로이드=크롬, 아이폰=사파리에서만 안내대로 된다.
+  const chrome=android&&!inApp&&/Chrome\//.test(ua)&&!/SamsungBrowser|Whale|EdgA|OPR|YaBrowser|Firefox|; wv\)/.test(ua);
+  const safari=ios&&!inApp&&/Safari\//.test(ua)&&!/CriOS|FxiOS|EdgiOS|Whale|OPiOS|YaBrowser/.test(ua);
   let deferred=null;
   addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;});
   addEventListener("appinstalled",()=>{$("instModal").hidden=true;$("instLink").hidden=true;});
   const here=location.origin+location.pathname;
   function installBody(){
-    if(inApp&&android)return `<ol><li>아래 버튼으로 크롬에서 열기</li><li>다시 나오는 안내대로 설치</li></ol><a class="go" href="intent://${here.replace(/^https:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;end">크롬으로 열기</a>`;
-    if(inApp&&ios)return `<ol><li>오른쪽 아래 <b>⋯</b> 메뉴 클릭</li><li><b>Safari로 열기</b> 클릭</li><li>사파리에서 다시 나오는 안내대로 설치</li></ol>`;
+    if(android&&!chrome)return `<ol><li>아래 버튼으로 크롬에서 열기</li><li>다시 나오는 안내대로 설치</li></ol><a class="go" href="intent://${here.replace(/^https:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;end">크롬으로 열기</a>`;
+    if(ios&&!safari)return `<ol><li>아래 버튼으로 주소 복사</li><li><b>사파리</b> 주소창에 붙여넣기</li><li>다시 나오는 안내대로 설치</li></ol><button type="button" class="go" id="instCopy">주소 복사</button>`;
     if(ios)return `<ol><li>아래 <b>공유 버튼</b>(네모에 위 화살표) 클릭</li><li><b>홈 화면에 추가</b> 클릭</li><li><b>추가</b> 클릭</li></ol>`;
     if(deferred)return `<button type="button" class="go" id="instGo">설치하기</button>`;
     return `<ol><li>오른쪽 위 <b>⋮</b> 메뉴 클릭</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b> 클릭</li><li><b>설치</b> 클릭</li></ol>`;
@@ -346,6 +349,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     let closed=false;try{closed=!!sessionStorage.getItem("jwInstallClosed")}catch(e){}
     if(!force&&!preview&&(Date.now()<Number(store.get("jwInstallUntil")||0)||closed))return;
     $("instBody").innerHTML=installBody();
+    const cp=$("instCopy");if(cp)cp.onclick=async()=>{try{await navigator.clipboard.writeText(here);cp.textContent="복사했어요";}catch(e){prompt("주소를 길게 눌러 복사해 주세요.",here);}};
     const go=$("instGo");if(go)go.onclick=async()=>{deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$("instModal").hidden=true;};
     $("instModal").hidden=false;
   }
