@@ -121,7 +121,7 @@ td.best{color:var(--red);font-weight:700}
 .gsum{font-size:13px;color:var(--muted);margin:-2px 0 10px;line-height:1.6}
 .gsum b{color:var(--ink);font-family:var(--mono)}
 th .ko{display:none;font-size:10px;letter-spacing:0;margin-top:2px;opacity:.85}
-body.showko th .ko{display:block}
+table.showko th .ko{display:block}
 th:not(:first-child),td:not(:first-child){text-align:center}
 .help{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:6px;padding:0;border:1px solid var(--muted);border-radius:50%;background:transparent;color:var(--muted);font:700 11px/1 var(--body);vertical-align:1px;cursor:pointer}
 .help[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -252,8 +252,11 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   let seasons=[], meta={}, mode="sum", logs={}, gSel=null, gAll=false, newsAll=false, news=[];
   const n=v=>Number(v)||0;
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const help=()=>`<button type="button" class="help" aria-label="영어 약자 한글 뜻 보기" aria-pressed="${document.body.classList.contains("showko")}">?</button>`;
-  document.addEventListener("click",e=>{if(!e.target.closest(".help"))return;e.stopPropagation();const on=document.body.classList.toggle("showko");document.querySelectorAll(".help").forEach(b=>b.setAttribute("aria-pressed",on));},true);
+  // 표마다 따로: ? 를 누른 표만 한글 뜻을 보여 준다(표를 다시 그려도 상태 유지).
+  const koOn={};
+  const help=()=>`<button type="button" class="help" aria-label="영어 약자 한글 뜻 보기">?</button>`;
+  const syncKo=()=>["tbl","gtbl"].forEach(id=>{const t=$(id);t.classList.toggle("showko",!!koOn[id]);const b=t.querySelector(".help");if(b)b.setAttribute("aria-pressed",!!koOn[id]);});
+  document.addEventListener("click",e=>{const b=e.target.closest(".help");if(!b)return;e.stopPropagation();const id=b.closest("table").id;koOn[id]=!koOn[id];syncKo();},true);
   const secs=s=>{const [m,ss]=String(s||"0:00").split(":").map(Number);return (m||0)*60+(ss||0);};
   const mmss=x=>`${Math.floor(x/60)}:${String(Math.round(x%60)).padStart(2,"0")}`;
   const pct=(m,a)=>a?(m/a*100).toFixed(1):"–";
@@ -299,6 +302,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     if(!gSel)gSel=cur.season;
     $("tbl").innerHTML=`<thead><tr>${head.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>${list.map(s=>row(s,s.season,(s===cur?"cur ":"")+"pick"+(s.season===gSel?" sel":"")).replace("<tr ",`<tr data-s="${s.season}" `)).join("")}</tbody><tfoot>${row(tot,"통산")}</tfoot>`;
     renderGames(list.map(s=>s.season));
+    syncKo();
   }
 
   function renderGames(order){
