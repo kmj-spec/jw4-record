@@ -126,6 +126,20 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .help{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:6px;padding:0;border:1px solid var(--muted);border-radius:50%;background:transparent;color:var(--muted);font:700 11px/1 var(--body);vertical-align:1px;cursor:pointer}
 .help[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .foot{font-size:12px;color:var(--muted);line-height:1.6}
+.fh{display:flex;align-items:center;gap:6px;width:100%;border:0;background:none;padding:0;font:inherit;letter-spacing:inherit;color:inherit;cursor:pointer;text-align:left}
+.fh::after{content:"⌄";margin-left:auto;font-size:16px;line-height:1;letter-spacing:0;transform:translateY(-3px);transition:transform .15s}
+.fh[aria-expanded="true"]::after{transform:translateY(2px) rotate(180deg)}
+.fold .thead h2{flex:1}
+.fold:not(.open) > :not(h2):not(.thead), .fold:not(.open) .seg{display:none}
+.fold:not(.open) h2, .fold:not(.open) .thead{margin-bottom:0}
+.fold{border-top:1px solid var(--line);padding-top:14px}
+.news{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.news li{padding:12px 14px;border-bottom:1px solid var(--line)}
+.news li:last-child{border-bottom:0}
+.news a{color:var(--ink);text-decoration:none;font-size:14px;line-height:1.5;display:block}
+.news a:hover{text-decoration:underline}
+.news .src{font-size:11px;color:var(--muted);margin-top:3px}
+.more{display:block;width:100%;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;padding:8px;cursor:pointer}
 #foot{font-size:10px;letter-spacing:.02em}
 .credit{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:28px 0 8px;font-family:var(--body);font-size:10px;letter-spacing:.02em}
 .credit span{grid-column:2;color:var(--muted);opacity:.6}
@@ -162,20 +176,10 @@ th:not(:first-child),td:not(:first-child){text-align:center}
     <div class="board" id="board"></div>
   </section>
 
-  <section id="growSec" hidden>
-    <h2>시즌별 성장 · 경기당 평균</h2>
-    <div class="panel growth" id="growth"></div>
-  </section>
-
-  <section id="tableSec" hidden>
-    <div class="thead">
-      <h2>시즌별 기록</h2>
-      <div class="seg" role="group" aria-label="표시 방식">
-        <button type="button" id="mSum" aria-pressed="true">누적</button>
-        <button type="button" id="mAvg" aria-pressed="false">평균</button>
-      </div>
-    </div>
-    <div class="scroll"><table id="tbl"></table></div>
+  <section id="newsSec" hidden>
+    <h2>관련 기사</h2>
+    <ul class="news" id="newsList"></ul>
+    <button type="button" class="more" id="newsMore" hidden></button>
   </section>
 
   <section id="gameSec" hidden>
@@ -185,6 +189,23 @@ th:not(:first-child),td:not(:first-child){text-align:center}
     </div>
     <div class="gsum" id="gSum"></div>
     <div class="scroll"><table id="gtbl" class="gtbl"></table></div>
+    <button type="button" class="more" id="gMore" hidden></button>
+  </section>
+
+  <section id="growSec" class="fold" hidden>
+    <h2><button type="button" class="fh" aria-expanded="false">시즌별 성장 · 경기당 평균</button></h2>
+    <div class="panel growth" id="growth"></div>
+  </section>
+
+  <section id="tableSec" class="fold" hidden>
+    <div class="thead">
+      <h2><button type="button" class="fh" aria-expanded="false">시즌별 기록</button></h2>
+      <div class="seg" role="group" aria-label="표시 방식">
+        <button type="button" id="mSum" aria-pressed="true">누적</button>
+        <button type="button" id="mAvg" aria-pressed="false">평균</button>
+      </div>
+    </div>
+    <div class="scroll"><table id="tbl"></table></div>
   </section>
 
   <p class="foot" id="foot" hidden>출처: KBL 공식 홈페이지</p>
@@ -205,8 +226,9 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 <script>
 (function(){
   const $=id=>document.getElementById(id);
-  let seasons=[], meta={}, mode="sum", logs={}, gSel=null;
+  let seasons=[], meta={}, mode="sum", logs={}, gSel=null, gAll=false, newsAll=false, news=[];
   const n=v=>Number(v)||0;
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const help=()=>`<button type="button" class="help" aria-label="영어 약자 한글 뜻 보기" aria-pressed="${document.body.classList.contains("showko")}">?</button>`;
   document.addEventListener("click",e=>{if(!e.target.closest(".help"))return;e.stopPropagation();const on=document.body.classList.toggle("showko");document.querySelectorAll(".help").forEach(b=>b.setAttribute("aria-pressed",on));},true);
   const secs=s=>{const [m,ss]=String(s||"0:00").split(":").map(Number);return (m||0)*60+(ss||0);};
@@ -229,7 +251,6 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
       ["경기",T.g,`${T.w}승 ${T.l}패`],["득점",T.pts,`2점 ${T.m2} · 3점 ${T.m3} · 자유투 ${T.ftm}`,1],["리바운드",T.reb,`공격 ${T.oreb} · 수비 ${T.dreb}`],["어시스트",T.ast,`경기당 ${pg(T.ast,T.g)}`],
       ["스틸",T.stl,`경기당 ${pg(T.stl,T.g)}`],["블록",T.blk,`굿디펜스 ${T.gd}`],["3점슛 성공",T.m3,`${T.a3}개 시도 · ${pct(T.m3,T.a3)}%`],["출전시간",mmss(T.sec),`득실마진 ${T.pm>0?"+":""}${T.pm}`]
     ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join("");
-    const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
     const m=String(meta.lastCheck||meta.updatedAt||"").match(/(\d{4})\.(\d\d)\.(\d\d)(?: (\d\d:\d\d))?/);
     $("updated").textContent=m?`업데이트 ${m[1]}. ${m[2]}. ${m[3]}.${m[4]?" "+m[4]:""}`:"";
 
@@ -263,6 +284,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     $("gSeason").innerHTML=order.filter(s=>logs[s]).map(s=>`<button type="button" data-s="${s}" aria-pressed="${s===gSel}">${s.slice(2,4)}-${s.slice(-2)}</button>`).join("");
     if(!doc){$("gtbl").innerHTML="";$("gSum").textContent="이 시즌 경기별 기록은 아직 없어요.";return;}
     const gs=(doc.games||[]).slice().sort((a,b)=>a.date<b.date?1:-1);
+    const GN=5;$("gMore").hidden=gs.length<=GN;$("gMore").textContent=gAll?"접기":`더 보기 (${gs.length-GN}경기)`;
     $("gameTitle").textContent=`${gSel} 경기별 기록 · ${gs.length}경기`;
     const mx=f=>Math.max(...gs.map(g=>n(g[f])));
     const best={pts:mx("pts"),reb:Math.max(...gs.map(g=>n(g.oreb)+n(g.dreb))),ast:mx("ast"),stl:mx("stl")};
@@ -271,7 +293,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     $("gSum").innerHTML=`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp}) · 두 자릿수 득점 <b>${dbl}</b>경기 · 최다 스틸 <b>${best.stl}</b>`;
     const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"],["+/-","득실마진"]];
     const c=(v,b)=>`<td${b&&v===b&&v>0?' class="best"':""}>${v}</td>`;
-    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+gs.map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
+    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko],i)=>`<th>${en}${ko?`<span class="ko">${ko}</span>`:""}${i?"":help()}</th>`).join("")}</tr></thead><tbody>`+(gAll?gs:gs.slice(0,GN)).map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
   }
   function pickSeason(s,scroll){gSel=s;render();if(scroll){try{$("gameSec").scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}}}
   $("tbl").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr)pickSeason(tr.dataset.s,true);});
@@ -280,7 +302,32 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   function setMode(m){mode=m;$("mAvg").setAttribute("aria-pressed",m==="avg");$("mSum").setAttribute("aria-pressed",m==="sum");render();}
   $("mAvg").onclick=()=>setMode("avg");$("mSum").onclick=()=>setMode("sum");
 
+  $("gMore").onclick=()=>{gAll=!gAll;render();if(!gAll)$("gameSec").scrollIntoView({block:"start"});};
+
+  // 관련 기사: news.json(없으면 칸을 숨김). 처음엔 3개, 더 보기로 10개까지.
+  function renderNews(){
+    const NN=3,list=news.slice(0,newsAll?10:NN);
+    $("newsSec").hidden=!news.length;
+    const md=s=>{const d=new Date(s);return isNaN(d)?"":`${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}`;};
+    $("newsList").innerHTML=list.map(x=>`<li><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="src">${esc(x.source||"")}${x.source?" · ":""}${md(x.date)}</div></li>`).join("");
+    $("newsMore").hidden=news.length<=NN;$("newsMore").textContent=newsAll?"접기":"더 보기";
+  }
+  $("newsMore").onclick=()=>{newsAll=!newsAll;renderNews();};
+  async function loadNews(){
+    try{const d=await fetch("news.json?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();});news=(d.items||[]).filter(x=>x.title&&/^https?:/.test(x.link||""));}catch(e){}
+    renderNews();
+  }
+
+  // 접는 칸: 펼친 칸은 이 기기에 기억한다.
+  const openSet=new Set((()=>{try{return JSON.parse(localStorage.getItem("jwOpen")||"[]")}catch(e){return []}})());
+  document.querySelectorAll("section.fold").forEach(sec=>{
+    const b=sec.querySelector(".fh"),set=o=>{sec.classList.toggle("open",o);b.setAttribute("aria-expanded",o);};
+    set(openSet.has(sec.id));
+    b.onclick=()=>{const o=!sec.classList.contains("open");set(o);o?openSet.add(sec.id):openSet.delete(sec.id);try{localStorage.setItem("jwOpen",JSON.stringify([...openSet]))}catch(e){}};
+  });
+
   async function load(){
+    loadNews();
     try{
       const d=await fetch("data.json?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();});
       seasons=(d.seasons||[]).filter(x=>x.season);
