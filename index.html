@@ -171,9 +171,11 @@ body.on-news > .wrap:not(#newsPage){display:none}
 #foot{font-size:10px;letter-spacing:.02em}
 .visits{border:1px dashed var(--line);border-radius:8px;padding:6px 8px;font-size:10px;color:var(--muted);width:240px;max-width:100%;align-self:center;text-align:center}
 .visits b{color:var(--muted);font-family:var(--mono)}
-.visits .spark{display:flex;align-items:flex-end;gap:2px;height:14px;margin-top:4px}
-.visits .spark span{flex:1;background:var(--line);border-radius:1px;min-height:1px}
-.visits .spark span:last-child{background:var(--muted)}
+.visits .spark{display:flex;align-items:flex-end;gap:2px;margin-top:4px}
+.visits .spark .c{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end}
+.visits .spark i{font-style:normal;font-size:8px;font-family:var(--mono);line-height:1;margin-bottom:2px}
+.visits .spark span{display:block;background:var(--line);border-radius:1px;min-height:1px}
+.visits .spark .c:last-child span{background:var(--muted)}
 .visits .days{display:flex;gap:2px;margin-top:2px;font-size:8px;font-family:var(--mono)}
 .visits .days span{flex:1;text-align:center}
 .credit{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:28px 0 8px;font-family:var(--body);font-size:10px;letter-spacing:.02em}
@@ -490,11 +492,12 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     if(!own)return;
     const get=k=>fetch(`${CNT}/get/${NS}/${k}`).then(r=>r.ok?r.json():{value:0}).then(d=>Number(d.value)||0).catch(()=>null);
     const days=[6,5,4,3,2,1,0].map(kst);
-    const [total,...vals]=await Promise.all([get("total"),...days.map(d=>get("d-"+d))]);
-    if(total===null)return;
-    const max=Math.max(...vals,1),v=i=>vals[i]||0;
-    $("visits").innerHTML=`방문자 · 오늘 <b>${v(6)}</b> · 어제 <b>${v(5)}</b> · 누적 <b>${total}</b>`+
-      `<div class="spark">${vals.map(x=>`<span style="height:${Math.round((x||0)/max*100)}%" title="${x||0}"></span>`).join("")}</div>`+
+    const vals=await Promise.all(days.map(d=>get("d-"+d)));
+    if(vals.every(x=>x===null))return;
+    const max=Math.max(...vals.map(x=>x||0),1);
+    // 오늘 방문자 수 + 최근 7일 막대(막대마다 숫자)
+    $("visits").innerHTML=`오늘 방문자 <b>${vals[6]||0}</b>`+
+      `<div class="spark">${vals.map(x=>`<div class="c"><i>${x||0}</i><span style="height:${Math.round((x||0)/max*18)}px"></span></div>`).join("")}</div>`+
       `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
     $("visits").hidden=false;
   })();
