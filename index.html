@@ -50,7 +50,27 @@ button{cursor:pointer}
 
 .refresh{background:var(--red);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-weight:700;font-size:13px}
 .refresh:disabled{opacity:.55;cursor:default}
-#refreshMsg{font-family:var(--body);max-width:260px}
+#refreshMsg{font-family:var(--body);max-width:260px;font-size:11px}
+#refreshMsg:empty{display:none}
+.rf{display:grid;place-items:center;width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);font-size:13px;line-height:1;cursor:pointer}
+.rf:disabled{cursor:default}
+.rf.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.credit .inst{grid-column:1;justify-self:start;border:0;background:none;padding:0;font:inherit;font-size:10px;color:var(--muted);cursor:pointer}
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:end center;background:rgba(0,0,0,.45);padding:16px}
+.modal[hidden]{display:none}
+.sheet{width:100%;max-width:420px;background:var(--surface);color:var(--ink);border-radius:16px;padding:22px 20px 16px;box-shadow:0 10px 40px rgba(0,0,0,.25);margin-bottom:env(safe-area-inset-bottom,0px)}
+.sheet .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sheet .top img{width:48px;height:48px;border-radius:12px}
+.sheet h3{margin:0;font-size:17px}
+.sheet .top p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.sheet ol{margin:0 0 14px;padding-left:20px;font-size:14px;line-height:1.8}
+.sheet ol b{color:var(--red)}
+.sheet .note{font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.6}
+.sheet .go{display:block;width:100%;border:0;border-radius:10px;background:var(--red);color:#fff;font-weight:700;font-size:15px;padding:12px;margin-bottom:10px;cursor:pointer;text-align:center;text-decoration:none}
+.sheet .row{display:flex;justify-content:space-between}
+.sheet .row button{border:0;background:none;color:var(--muted);font-size:13px;padding:6px 2px;cursor:pointer}
+@media (min-width:600px){.modal{place-items:center}}
 
 h2{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
 .board{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -124,6 +144,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
         <div class="updated" id="updated">기록 불러오는 중…</div>
         <div class="updated" id="refreshMsg" role="status"></div>
       </div>
+      <button type="button" class="rf" id="rfBtn" aria-label="지금 업데이트" hidden>↻</button>
     </div>
   </header>
 
@@ -165,7 +186,15 @@ th:not(:first-child),td:not(:first-child){text-align:center}
   </section>
 
   <p class="foot" id="foot" hidden>출처: KBL 공식 홈페이지</p>
-  <p class="credit"><span>@winning_woong_4</span><a href="https://ig.me/m/winning_woong_4" target="_blank" rel="noopener">오류 문의 · 신고</a></p>
+  <p class="credit"><button type="button" class="inst" id="instLink" hidden>앱으로 설치</button><span>@winning_woong_4</span><a href="https://ig.me/m/winning_woong_4" target="_blank" rel="noopener">오류 문의 · 신고</a></p>
+</div>
+
+<div class="modal" id="instModal" hidden role="dialog" aria-modal="true" aria-labelledby="instTitle">
+  <div class="sheet">
+    <div class="top"><img src="icons/icon-192.png" alt=""><div><h3 id="instTitle">앱으로 설치하기</h3><p>홈 화면에서 바로 열리는 정웅이 기록</p></div></div>
+    <div id="instBody"></div>
+    <div class="row"><button type="button" id="instNever">다시 보지 않기</button><button type="button" id="instClose">닫기</button></div>
+  </div>
 </div>
 
 <script>
@@ -249,7 +278,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   function setMode(m){mode=m;$("mAvg").setAttribute("aria-pressed",m==="avg");$("mSum").setAttribute("aria-pressed",m==="sum");render();}
   $("mAvg").onclick=()=>setMode("avg");$("mSum").onclick=()=>setMode("sum");
 
-  (async()=>{
+  async function load(){
     try{
       const d=await fetch("data.json?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();});
       seasons=(d.seasons||[]).filter(x=>x.season);
@@ -258,8 +287,67 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
       $("emptyBox").hidden=!!seasons.length;
       if(!seasons.length)$("updated").textContent="";
       render();
-    }catch(e){$("updated").textContent="";$("emptyBox").textContent="기록 파일(data.json)을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.";$("emptyBox").hidden=false;}
-  })();
+      return true;
+    }catch(e){if(!seasons.length){$("updated").textContent="";$("emptyBox").textContent="기록 파일(data.json)을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.";$("emptyBox").hidden=false;}return false;}
+  }
+  load().then(()=>setTimeout(()=>showInstall(false),1200));
+
+  // 수동 업데이트: 이 기기에 GitHub 열쇠(토큰)가 저장돼 있을 때만 버튼이 보인다. 주소 끝에 #key 를 붙여 열면 열쇠를 넣거나 지울 수 있다.
+  const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
+  const msg=t=>{$("refreshMsg").textContent=t||"";};
+  if(location.hash==="#key"){
+    const t=prompt("GitHub 열쇠(토큰)를 붙여넣어 주세요.\n비워 두고 확인을 누르면 이 기기에서 열쇠가 지워져요.",store.get("jwToken")||"");
+    if(t!==null){store.set("jwToken",t.trim());alert(t.trim()?"열쇠를 저장했어요. 이제 이 기기에만 업데이트 버튼이 보여요.":"열쇠를 지웠어요.");}
+    history.replaceState(null,"",location.pathname+location.search);
+  }
+  $("rfBtn").hidden=!store.get("jwToken");
+  $("rfBtn").onclick=async()=>{
+    const b=$("rfBtn"),before=meta.lastCheck;
+    b.disabled=true;b.classList.add("spin");msg("업데이트 요청 중…");
+    const done=t=>{b.disabled=false;b.classList.remove("spin");msg(t);};
+    try{
+      const r=await fetch("https://api.github.com/repos/kmj-spec/jw4-record/actions/workflows/update.yml/dispatches",{method:"POST",headers:{"Accept":"application/vnd.github+json","Authorization":"Bearer "+store.get("jwToken")},body:JSON.stringify({ref:"main"})});
+      if(r.status===401||r.status===403||r.status===404)return done("열쇠가 맞지 않거나 권한이 없어요. 주소 끝에 #key 를 붙여 열쇠를 다시 넣어 주세요.");
+      if(!r.ok)return done("요청이 안 됐어요("+r.status+"). 잠시 뒤 다시 눌러 주세요.");
+    }catch(e){return done("인터넷 연결을 확인해 주세요.");}
+    msg("기록 받아오는 중… 1~2분 걸려요.");
+    for(let i=0;i<30;i++){
+      await new Promise(r=>setTimeout(r,10000));
+      if(await load()&&meta.lastCheck!==before){done("업데이트 완료!");return setTimeout(()=>msg(""),4000);}
+    }
+    done("아직 반영 전이에요. 잠시 뒤 새로고침해 주세요.");
+  };
+
+  // 앱 설치 안내 팝업: 휴대폰에서, 아직 앱으로 열지 않았을 때만.
+  const ua=navigator.userAgent;
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+  const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const android=/Android/.test(ua);
+  const inApp=/KAKAOTALK|Instagram|NAVER|FBAN|FBAV|Line\/|DaumApps|everytimeApp/i.test(ua);
+  let deferred=null;
+  addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;});
+  addEventListener("appinstalled",()=>{$("instModal").hidden=true;$("instLink").hidden=true;});
+  const here=location.origin+location.pathname;
+  function installBody(){
+    if(inApp&&android)return `<p class="note">지금은 다른 앱 안의 브라우저로 열려 있어요. 크롬에서 열어야 설치할 수 있어요.</p><a class="go" href="intent://${here.replace(/^https:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;end">크롬으로 열기</a>`;
+    if(inApp&&ios)return `<ol><li>오른쪽 아래(또는 위) <b>⋯</b> 메뉴를 눌러요.</li><li><b>Safari로 열기</b>(기본 브라우저로 열기)를 눌러요.</li><li>사파리에서 이 안내를 다시 따라 해요.</li></ol>`;
+    if(ios)return `<ol><li>화면 아래(또는 주소창 옆) <b>공유 버튼</b>(네모에 위 화살표)을 눌러요.</li><li>목록을 내려 <b>홈 화면에 추가</b>를 눌러요.</li><li>'웹 앱으로 열기'가 보이면 켜 두고 <b>추가</b>를 눌러요.</li></ol><p class="note">아이폰은 꼭 사파리에서 해야 앱처럼 열려요.</p>`;
+    if(deferred)return `<p class="note">버튼 하나로 설치돼요. 설치하면 홈 화면에 빨간 유니폼 아이콘이 생겨요.</p><button type="button" class="go" id="instGo">설치하기</button>`;
+    return `<ol><li>오른쪽 위 <b>⋮</b> 메뉴를 눌러요.</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 눌러요.</li><li>'설치'와 '바로가기 만들기' 중에는 <b>설치</b>를 골라요.</li></ol><p class="note">크롬에서 해야 앱처럼 열려요.</p>`;
+  }
+  function showInstall(force){
+    if(standalone||!(ios||android))return;
+    $("instLink").hidden=false;
+    let closed=false;try{closed=!!sessionStorage.getItem("jwInstallClosed")}catch(e){}
+    if(!force&&(store.get("jwInstallHide")||closed))return;
+    $("instBody").innerHTML=installBody();
+    const go=$("instGo");if(go)go.onclick=async()=>{deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$("instModal").hidden=true;};
+    $("instModal").hidden=false;
+  }
+  $("instLink").onclick=()=>showInstall(true);
+  $("instClose").onclick=()=>{$("instModal").hidden=true;try{sessionStorage.setItem("jwInstallClosed","1")}catch(e){}};
+  $("instNever").onclick=()=>{$("instModal").hidden=true;store.set("jwInstallHide","1");};
+  $("instModal").addEventListener("click",e=>{if(e.target===$("instModal"))$("instClose").click();});
 })();
 </script>
 

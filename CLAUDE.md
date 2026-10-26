@@ -7,6 +7,8 @@
 - `data.json` — `{updatedAt, lastCheck, lastResult, seasons:[시즌별 누적], gamelogs:{시즌명:[경기별]}}`.
 - `scripts/fetch.mjs` — KBL 데이터 서버(kbl-api.sports2i.com)에서 기록을 받아 `data.json`을 갱신. 직접 호출이 막히면 Playwright로 kbl.or.kr을 열고 페이지 안에서 호출한다.
 - `.github/workflows/update.yml` — 매일 한국 시간 자정에 `fetch.mjs` 실행 후 바뀐 `data.json`을 커밋. Actions 탭에서 수동 실행도 가능.
+- 수동 업데이트: 주소 끝에 `#key`를 붙여 열면 GitHub 토큰(이 저장소 Actions 읽기/쓰기만)을 그 기기 localStorage(`jwToken`)에 저장. 토큰이 있는 기기에만 맨 위 ↻ 버튼이 보이고, 누르면 워크플로를 실행한 뒤 data.json이 바뀔 때까지 10초마다 다시 읽는다.
+- 앱 설치 안내: 휴대폰에서 앱으로 열지 않았을 때 팝업(아이폰·안드로이드·카카오톡 등 앱 속 브라우저별 안내). 맨 아래 '앱으로 설치'로 다시 열 수 있다. `sw.js`는 설치용(캐시 안 함).
 
 ## 데이터 서버 메모
 - 시즌 목록: `GET https://kbl-api.sports2i.com/api/v1/Common/recent-seasons?seriesCd=1`
