@@ -417,11 +417,13 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 
   // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
   // 숫자는 열쇠가 있는 기기에만 보인다.
-  const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-jw4";
+  const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-v2";
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
   (async()=>{
     const own=!!store.get("jwToken");
-    if(!own&&store.get("jwSeen")!==kst()){
+    // 진짜 주소로 들어온 사람만 센다(Vercel 배포 미리보기 로봇·자동화 브라우저 제외).
+    const real=location.hostname==="winningwoong.vercel.app"&&!navigator.webdriver;
+    if(real&&!own&&store.get("jwSeen")!==kst()){
       store.set("jwSeen",kst());
       ["total","d-"+kst()].forEach(k=>fetch(`${CNT}/hit/${NS}/${k}`,{keepalive:true}).catch(()=>{}));
     }
