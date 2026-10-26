@@ -191,7 +191,7 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 
 <div class="modal" id="instModal" hidden role="dialog" aria-modal="true" aria-labelledby="instTitle">
   <div class="sheet">
-    <div class="top"><img src="icons/icon-192.png" alt=""><div><h3 id="instTitle">앱으로 설치하기</h3><p>홈 화면에서 바로 열리는 정웅이 기록</p></div></div>
+    <div class="top"><img src="icons/icon-192.png" alt=""><h3 id="instTitle">앱으로 설치하기</h3></div>
     <div id="instBody"></div>
     <div class="row"><button type="button" id="instNever">다시 보지 않기</button><button type="button" id="instClose">닫기</button></div>
   </div>
@@ -329,11 +329,11 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   addEventListener("appinstalled",()=>{$("instModal").hidden=true;$("instLink").hidden=true;});
   const here=location.origin+location.pathname;
   function installBody(){
-    if(inApp&&android)return `<p class="note">지금은 다른 앱 안의 브라우저로 열려 있어요. 크롬에서 열어야 설치할 수 있어요.</p><a class="go" href="intent://${here.replace(/^https:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;end">크롬으로 열기</a>`;
-    if(inApp&&ios)return `<ol><li>오른쪽 아래(또는 위) <b>⋯</b> 메뉴를 눌러요.</li><li><b>Safari로 열기</b>(기본 브라우저로 열기)를 눌러요.</li><li>사파리에서 이 안내를 다시 따라 해요.</li></ol>`;
-    if(ios)return `<ol><li>화면 아래(또는 주소창 옆) <b>공유 버튼</b>(네모에 위 화살표)을 눌러요.</li><li>목록을 내려 <b>홈 화면에 추가</b>를 눌러요.</li><li>'웹 앱으로 열기'가 보이면 켜 두고 <b>추가</b>를 눌러요.</li></ol><p class="note">아이폰은 꼭 사파리에서 해야 앱처럼 열려요.</p>`;
-    if(deferred)return `<p class="note">버튼 하나로 설치돼요. 설치하면 홈 화면에 빨간 유니폼 아이콘이 생겨요.</p><button type="button" class="go" id="instGo">설치하기</button>`;
-    return `<ol><li>오른쪽 위 <b>⋮</b> 메뉴를 눌러요.</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 눌러요.</li><li>'설치'와 '바로가기 만들기' 중에는 <b>설치</b>를 골라요.</li></ol><p class="note">크롬에서 해야 앱처럼 열려요.</p>`;
+    if(inApp&&android)return `<ol><li>아래 버튼으로 크롬에서 열기</li><li>다시 나오는 안내대로 설치</li></ol><a class="go" href="intent://${here.replace(/^https:\/\//,"")}#Intent;scheme=https;package=com.android.chrome;end">크롬으로 열기</a>`;
+    if(inApp&&ios)return `<ol><li>오른쪽 아래 <b>⋯</b> 메뉴 클릭</li><li><b>Safari로 열기</b> 클릭</li><li>사파리에서 다시 나오는 안내대로 설치</li></ol>`;
+    if(ios)return `<ol><li>아래 <b>공유 버튼</b>(네모에 위 화살표) 클릭</li><li><b>홈 화면에 추가</b> 클릭</li><li><b>추가</b> 클릭</li></ol>`;
+    if(deferred)return `<button type="button" class="go" id="instGo">설치하기</button>`;
+    return `<ol><li>오른쪽 위 <b>⋮</b> 메뉴 클릭</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b> 클릭</li><li><b>설치</b> 클릭</li></ol>`;
   }
   function showInstall(force){
     if(standalone||!(ios||android))return;
