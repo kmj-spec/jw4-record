@@ -27,8 +27,9 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
-      - run: node scripts/fetch.mjs
+      # 브라우저(Playwright)는 KBL 직접 호출이 막혔을 때만 설치해서 다시 돌린다.
+      - name: 기록 받기
+        run: node scripts/fetch.mjs || { npx playwright install --with-deps chromium && node scripts/fetch.mjs; }
       - name: 뺄 기사 적기
         if: ${{ inputs.hide != '' }}
         run: node scripts/hide.mjs
