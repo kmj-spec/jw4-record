@@ -46,7 +46,7 @@ button{cursor:pointer}
 .upd .updated{font-family:var(--body);text-align:left;line-height:1.4}
 .upd .updated span{display:block;white-space:nowrap}
 .refresh{flex-shrink:0}
-@media (min-width:640px){.upd{width:auto}.upd .updated{text-align:right}}
+
 .refresh{background:var(--red);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-weight:700;font-size:13px}
 .refresh:disabled{opacity:.55;cursor:default}
 #refreshMsg{font-family:var(--body);max-width:260px}
@@ -198,8 +198,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
       ["스틸",T.stl,`경기당 ${pg(T.stl,T.g)}`],["블록",T.blk,`굿디펜스 ${T.gd}`],["3점슛 성공",T.m3,`${T.a3}개 시도 · ${pct(T.m3,T.a3)}%`],["출전시간",mmss(T.sec),`득실마진 ${T.pm>0?"+":""}${T.pm}`]
     ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join("");
     const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-    const lc=meta.lastCheck?String(meta.lastCheck).replace(/^\d{4}\./,""):"";
-    $("updated").innerHTML=(meta.updatedAt?`<span>기록 반영 ${esc(meta.updatedAt)}</span>`:"")+(lc?`<span>마지막 확인 ${esc(lc)}${meta.lastResult?` · ${esc(meta.lastResult)}`:""}</span>`:"");
+    const m=String(meta.lastCheck||meta.updatedAt||"").match(/(\d{4})\.(\d\d)\.(\d\d)(?: (\d\d:\d\d))?/);
+    $("updated").textContent=m?`업데이트 ${m[1]}. ${m[2]}. ${m[3]}.${m[4]?" "+m[4]:""}`:"";
 
     const cur=list[0], prev=list[1];
     $("nowTitle").textContent=`${cur.season} 시즌 평균 · ${cur.g}경기 ${cur.w}승 ${cur.l}패`;
