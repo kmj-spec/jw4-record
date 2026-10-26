@@ -145,10 +145,10 @@ body.on-news > .wrap:not(#newsPage){display:none}
 .np-head h1{font-family:var(--display);font-weight:400;font-size:28px;margin:0;line-height:1}
 .back{border:0;background:none;padding:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
 #newsYears{align-self:flex-start}
-.pager{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.pager{display:flex;justify-content:center;gap:10px;margin-top:12px}
 .pager:empty{display:none}
-.pager button{min-width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
-.pager button[aria-current="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:700}
+.pager button{min-width:24px;padding:4px;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer}
+.pager button[aria-current="true"]{color:var(--ink);font-weight:700;text-decoration:underline;text-underline-offset:4px}
 .pend{border:1px dashed var(--red);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--red-soft)}
 .pend .ph{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px}
 .pend .pi{padding:8px 0;border-top:1px solid var(--line)}
