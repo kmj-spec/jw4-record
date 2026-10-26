@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<title>정웅이 기록</title>
+<style>*{box-sizing:border-box}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 선수 헤더 → 이번 시즌 평균 수치판 → 시즌별 성장 비교 → KBL식 시즌별 기록표(평균/누적) */
+:root{
+  --bg:#f6f4f3; --surface:#ffffff; --ink:#1d1a1b; --muted:#6f6668; --line:#e3dcdc;
+  --red:#b5162b; --red-soft:#fbe9eb; --gold:#a8812e; --up:#1f7a4d; --down:#a3323f;
+  --display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141112; --surface:#1e1a1b; --ink:#f1ecec; --muted:#a59a9c; --line:#352e30;
+  --red:#ef4b5f; --red-soft:#3a1a1f; --gold:#d6ad55; --up:#4cc488; --down:#f07b88; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141112; --surface:#1e1a1b; --ink:#f1ecec; --muted:#a59a9c; --line:#352e30;
+  --red:#ef4b5f; --red-soft:#3a1a1f; --gold:#d6ad55; --up:#4cc488; --down:#f07b88; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 64px;display:flex;flex-direction:column;gap:24px}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--red);padding-bottom:14px}
+.hero h1{font-family:var(--display);font-weight:400;font-size:38px;margin:0;line-height:1}
+.hero p{margin:6px 0 0;color:var(--muted);font-size:13px;letter-spacing:.04em}
+.updated{font-size:12px;color:var(--muted);font-family:var(--mono);text-align:right}
+.upd{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.upd .info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.upd .updated{font-family:var(--body);text-align:left;line-height:1.4}
+.upd .updated span{display:block;white-space:nowrap}
+.refresh{flex-shrink:0}
+@media (min-width:640px){.upd{width:auto}.upd .updated{text-align:right}}
+.refresh{background:var(--red);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-weight:700;font-size:13px}
+.refresh:disabled{opacity:.55;cursor:default}
+#refreshMsg{font-family:var(--body);max-width:260px}
+
+h2{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
+.board{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cell{padding:14px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.cell:nth-child(4n){border-right:0}
+.cell:nth-last-child(-n+4){border-bottom:0}
+.cell .k{font-size:12px;color:var(--muted)}
+.cell .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.cell .s{font-size:11px;font-family:var(--mono);color:var(--muted)}
+.cell .s.up{color:var(--up)}.cell .s.down{color:var(--down)}
+.cell.key .v{color:var(--red)}
+@media (max-width:520px){.board{grid-template-columns:repeat(2,1fr)}.cell:nth-child(4n){border-right:1px solid var(--line)}.cell:nth-child(2n){border-right:0}.cell:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.cell:nth-last-child(-n+2){border-bottom:0}.cell .v{font-size:22px}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.growth{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:620px){.growth{grid-template-columns:repeat(2,1fr)}}
+.gchart .t{font-size:13px;font-weight:700;margin-bottom:6px}
+.bar{display:grid;grid-template-columns:44px 1fr 34px;align-items:center;gap:6px;font-size:11px;margin-bottom:5px}
+.bar .lab{color:var(--muted);font-family:var(--mono)}
+.bar .track{height:12px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;background:var(--muted);border-radius:3px}
+.bar.cur .fill{background:var(--red)}
+.bar .val{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.bar.cur .val{color:var(--red);font-weight:600}
+
+.thead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.thead h2{margin:0}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:6px 14px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}
+th{background:var(--surface);color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.03em;padding:9px 7px;text-align:right;border-bottom:2px solid var(--ink);white-space:nowrap}
+td{padding:10px 7px;text-align:right;border-bottom:1px solid var(--line);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);font-family:var(--body);font-weight:500}
+tbody tr.cur td{background:var(--red-soft)}
+tbody tr.cur td:first-child{color:var(--red)}
+tfoot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:0}
+td b{color:var(--red)}
+tbody tr.pick{cursor:pointer}
+tbody tr.pick:hover td{background:var(--red-soft)}
+tbody tr.sel td{box-shadow:inset 0 -2px 0 var(--red)}
+table.gtbl{min-width:760px}
+.res{display:inline-block;min-width:20px;text-align:center;border-radius:4px;font-size:11px;font-weight:700;padding:1px 4px;font-family:var(--body);color:#fff}
+.res.W{background:var(--up)}.res.L{background:var(--down)}
+td.best{color:var(--red);font-weight:700}
+.gsum{font-size:13px;color:var(--muted);margin:-2px 0 10px;line-height:1.6}
+.gsum b{color:var(--ink);font-family:var(--mono)}
+th .ko{display:block;font-size:10px;letter-spacing:0;margin-top:1px;opacity:.85}
+.foot{font-size:12px;color:var(--muted);line-height:1.6}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:28px 18px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <h1>박정웅</h1>
+      <p>안양 정관장 · KBL 정규시즌 기록</p>
+    </div>
+    <div class="upd">
+      <div class="info">
+        <div class="updated" id="updated">기록 불러오는 중…</div>
+        <div class="updated" id="refreshMsg" role="status"></div>
+      </div>
+    </div>
+  </header>
+
+  <div id="emptyBox" class="empty" hidden>기록을 불러오지 못했어요.</div>
+
+  <section id="careerSec" hidden>
+    <h2 id="careerTitle">통산 누적</h2>
+    <div class="board" id="careerBoard"></div>
+  </section>
+
+  <section id="nowSec" hidden>
+    <h2 id="nowTitle">이번 시즌 평균</h2>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section id="growSec" hidden>
+    <h2>시즌별 성장 · 경기당 평균</h2>
+    <div class="panel growth" id="growth"></div>
+  </section>
+
+  <section id="tableSec" hidden>
+    <div class="thead">
+      <h2>시즌별 기록</h2>
+      <div class="seg" role="group" aria-label="표시 방식">
+        <button type="button" id="mSum" aria-pressed="true">누적</button>
+        <button type="button" id="mAvg" aria-pressed="false">평균</button>
+      </div>
+    </div>
+    <div class="scroll"><table id="tbl"></table></div>
+    <p class="foot" style="margin:8px 0 0">시즌을 누르면 아래에 그 시즌 경기별 기록이 나와요.</p>
+  </section>
+
+  <section id="gameSec" hidden>
+    <div class="thead" style="flex-wrap:wrap">
+      <h2 id="gameTitle">경기별 기록</h2>
+      <div class="seg" role="group" aria-label="시즌 선택" id="gSeason"></div>
+    </div>
+    <div class="gsum" id="gSum"></div>
+    <div class="scroll"><table id="gtbl" class="gtbl"></table></div>
+  </section>
+
+  <p class="foot" id="foot" hidden>출처: KBL 공식 홈페이지 선수 기록(정규시즌). 매일 밤 12시에 자동으로 갱신돼요. 표의 맨 아래 줄이 통산 기록이에요.</p>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  let seasons=[], meta={}, mode="sum", logs={}, gSel=null;
+  const n=v=>Number(v)||0;
+  const secs=s=>{const [m,ss]=String(s||"0:00").split(":").map(Number);return (m||0)*60+(ss||0);};
+  const mmss=x=>`${Math.floor(x/60)}:${String(Math.round(x%60)).padStart(2,"0")}`;
+  const pct=(m,a)=>a?(m/a*100).toFixed(1):"–";
+  const pg=(v,g)=>g?(v/g).toFixed(1):"–";
+  const F=["pts","m2","a2","m3","a3","ftm","fta","oreb","dreb","ast","stl","blk","gd","dk","dka","to","pf","pp","ppa","pm","w","l","g"];
+
+  function sum(list){const t={sec:0};F.forEach(f=>t[f]=0);list.forEach(s=>{F.forEach(f=>t[f]+=n(s[f]));t.sec+=secs(s.min);});t.reb=t.oreb+t.dreb;t.fgm=t.m2+t.m3;t.fga=t.a2+t.a3;return t;}
+  function enrich(s){const t=sum([s]);t.season=s.season;return t;}
+
+  function render(){
+    const list=seasons.slice().sort((a,b)=>a.season<b.season?1:-1).map(enrich);
+    const has=list.length>0;
+    ["careerSec","nowSec","growSec","tableSec","foot"].forEach(id=>$(id).hidden=!has);
+    if(!has)return;
+    const T=sum(seasons);
+    $("careerTitle").textContent=`통산 누적 · ${list[list.length-1].season.slice(0,4)}년 데뷔 이후 정규시즌`;
+    $("careerBoard").innerHTML=[
+      ["경기",T.g,`${T.w}승 ${T.l}패`],["득점",T.pts,`2점 ${T.m2} · 3점 ${T.m3} · 자유투 ${T.ftm}`,1],["리바운드",T.reb,`공격 ${T.oreb} · 수비 ${T.dreb}`],["어시스트",T.ast,`경기당 ${pg(T.ast,T.g)}`],
+      ["스틸",T.stl,`경기당 ${pg(T.stl,T.g)}`],["블록",T.blk,`굿디펜스 ${T.gd}`],["3점슛 성공",T.m3,`${T.a3}개 시도 · ${pct(T.m3,T.a3)}%`],["출전시간",mmss(T.sec),`득실마진 ${T.pm>0?"+":""}${T.pm}`]
+    ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="s">${c[2]}</div></div>`).join("");
+    const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    const lc=meta.lastCheck?String(meta.lastCheck).replace(/^\d{4}\./,""):"";
+    $("updated").innerHTML=(meta.updatedAt?`<span>기록 반영 ${esc(meta.updatedAt)}</span>`:"")+(lc?`<span>마지막 확인 ${esc(lc)}${meta.lastResult?` · ${esc(meta.lastResult)}`:""}</span>`:"");
+
+    const cur=list[0], prev=list[1];
+    $("nowTitle").textContent=`${cur.season} 시즌 평균 · ${cur.g}경기 ${cur.w}승 ${cur.l}패`;
+    const diff=(f,dec=1)=>{if(!prev||!prev.g)return "";const d=cur[f]/cur.g-prev[f]/prev.g;if(Math.abs(d)<0.05)return `<div class="s">지난 시즌과 같음</div>`;return `<div class="s ${d>0?"up":"down"}">지난 시즌 대비 ${d>0?"+":""}${d.toFixed(dec)}</div>`;};
+    const pd=(m,a)=>{if(!prev||!prev[a]||!cur[a])return "";const d=cur[m]/cur[a]*100-prev[m]/prev[a]*100;return `<div class="s ${d>0?"up":"down"}">지난 시즌 대비 ${d>0?"+":""}${d.toFixed(1)}%p</div>`;};
+    const minDiff=()=>{if(!prev||!prev.g)return "";const d=cur.sec/cur.g-prev.sec/prev.g;return `<div class="s ${d>0?"up":"down"}">지난 시즌 대비 ${d>0?"+":"−"}${mmss(Math.abs(d))}</div>`;};
+    $("board").innerHTML=[
+      ["득점",pg(cur.pts,cur.g),diff("pts"),1],["리바운드",pg(cur.reb,cur.g),diff("reb")],["어시스트",pg(cur.ast,cur.g),diff("ast")],["스틸",pg(cur.stl,cur.g),diff("stl")],
+      ["출전시간",mmss(cur.sec/cur.g),minDiff()],["야투율",pct(cur.fgm,cur.fga)+"%",pd("fgm","fga")],["3점 성공률",pct(cur.m3,cur.a3)+"%",pd("m3","a3")],["득실마진 (+/-)",(cur.pm>0?"+":"")+cur.pm,`<div class="s">시즌 누적</div>`]
+    ].map(c=>`<div class="cell${c[3]?" key":""}"><div class="k">${c[0]}</div><div class="v">${c[1]}</div>${c[2]}</div>`).join("");
+
+    const asc=list.slice().reverse();
+    const charts=[["득점","pts"],["리바운드","reb"],["어시스트","ast"],["스틸","stl"]];
+    $("growth").innerHTML=charts.map(([lab,f])=>{const vals=asc.map(s=>s.g?s[f]/s.g:0),max=Math.max(...vals,0.1);
+      return `<div class="gchart"><div class="t">${lab}</div>`+asc.map((s,i)=>`<div class="bar${s===cur?" cur":""}"><span class="lab">${s.season.slice(2,4)}-${s.season.slice(-2)}</span><span class="track"><span class="fill" style="width:${vals[i]/max*100}%;display:block"></span></span><span class="val">${vals[i].toFixed(1)}</span></div>`).join("")+`</div>`;}).join("");
+
+    const head=[["시즌",""],["G","경기"],["W-L","승-패"],["MIN","출전시간"],["PTS","득점"],["2P","2점 성공-시도"],["2P%","2점 성공률"],["3P","3점 성공-시도"],["3P%","3점 성공률"],["FG","야투 성공-시도"],["FG%","야투율"],["FT","자유투 성공-시도"],["FT%","자유투율"],["OREB","공격 리바"],["DREB","수비 리바"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["GD","굿디펜스"],["DK","덩크"],["TO","턴오버"],["PF","파울"],["PP","페인트존 성공"],["+/-","득실마진"]];
+    const row=(s,label,cls)=>{const a=mode==="avg",g=s.g,v=f=>a?pg(s[f],g):s[f],mt=(m,at)=>a?`${pg(s[m],g)}-${pg(s[at],g)}`:`${s[m]}-${s[at]}`;
+      return `<tr class="${cls||""}"><td>${label}</td><td>${g}</td><td>${s.w}-${s.l}</td><td>${a?mmss(s.sec/g):mmss(s.sec)}</td><td><b>${v("pts")}</b></td><td>${mt("m2","a2")}</td><td>${pct(s.m2,s.a2)}</td><td>${mt("m3","a3")}</td><td>${pct(s.m3,s.a3)}</td><td>${mt("fgm","fga")}</td><td>${pct(s.fgm,s.fga)}</td><td>${mt("ftm","fta")}</td><td>${pct(s.ftm,s.fta)}</td><td>${v("oreb")}</td><td>${v("dreb")}</td><td>${v("reb")}</td><td>${v("ast")}</td><td>${v("stl")}</td><td>${v("blk")}</td><td>${v("gd")}</td><td>${v("dk")}</td><td>${v("to")}</td><td>${v("pf")}</td><td>${v("pp")}</td><td>${a?pg(s.pm,g):(s.pm>0?"+":"")+s.pm}</td></tr>`;};
+    const tot=sum(seasons);
+    if(!gSel)gSel=cur.season;
+    $("tbl").innerHTML=`<thead><tr>${head.map(([en,ko])=>`<th>${en}${ko?`<span class="ko">(${ko})</span>`:""}</th>`).join("")}</tr></thead><tbody>${list.map(s=>row(s,s.season,(s===cur?"cur ":"")+"pick"+(s.season===gSel?" sel":"")).replace("<tr ",`<tr data-s="${s.season}" `)).join("")}</tbody><tfoot>${row(tot,"통산")}</tfoot>`;
+    renderGames(list.map(s=>s.season));
+  }
+
+  function renderGames(order){
+    const doc=logs[gSel];
+    $("gameSec").hidden=!Object.keys(logs).length;
+    $("gSeason").innerHTML=order.filter(s=>logs[s]).map(s=>`<button type="button" data-s="${s}" aria-pressed="${s===gSel}">${s.slice(2,4)}-${s.slice(-2)}</button>`).join("");
+    if(!doc){$("gtbl").innerHTML="";$("gSum").textContent="이 시즌 경기별 기록은 아직 없어요.";return;}
+    const gs=(doc.games||[]).slice().sort((a,b)=>a.date<b.date?1:-1);
+    $("gameTitle").textContent=`${gSel} 경기별 기록 · ${gs.length}경기`;
+    const mx=f=>Math.max(...gs.map(g=>n(g[f])));
+    const best={pts:mx("pts"),reb:Math.max(...gs.map(g=>n(g.oreb)+n(g.dreb))),ast:mx("ast"),stl:mx("stl")};
+    const bg=gs.find(g=>n(g.pts)===best.pts);
+    const dbl=gs.filter(g=>n(g.pts)>=10).length;
+    $("gSum").innerHTML=`시즌 최다 득점 <b>${best.pts}</b>점 (${bg.date.slice(5)} vs ${bg.opp}) · 두 자릿수 득점 <b>${dbl}</b>경기 · 최다 스틸 <b>${best.stl}</b>`;
+    const hd=[["일자",""],["상대",""],["결과",""],["MIN","출전"],["PTS","득점"],["REB","리바운드"],["AST","어시스트"],["STL","스틸"],["BLK","블록"],["2P","2점"],["3P","3점"],["FT","자유투"],["TO","턴오버"],["PF","파울"],["+/-","득실마진"]];
+    const c=(v,b)=>`<td${b&&v===b&&v>0?' class="best"':""}>${v}</td>`;
+    $("gtbl").innerHTML=`<thead><tr>${hd.map(([en,ko])=>`<th>${en}${ko?`<span class="ko">(${ko})</span>`:""}</th>`).join("")}</tr></thead><tbody>`+gs.map(g=>{const reb=n(g.oreb)+n(g.dreb);return `<tr><td>${g.date.slice(2)}</td><td>${g.opp}</td><td><span class="res ${g.wl}">${g.wl==="W"?"승":"패"}</span> ${g.score}-${g.oppScore}</td><td>${mmss(n(g.sec))}</td>${c(n(g.pts),best.pts)}${c(reb,best.reb)}${c(n(g.ast),best.ast)}${c(n(g.stl),best.stl)}<td>${n(g.blk)}</td><td>${n(g.m2)}-${n(g.a2)}</td><td>${n(g.m3)}-${n(g.a3)}</td><td>${n(g.ftm)}-${n(g.fta)}</td><td>${n(g.to)}</td><td>${n(g.pf)}</td><td>${n(g.pm)>0?"+":""}${n(g.pm)}</td></tr>`;}).join("")+`</tbody>`;
+  }
+  function pickSeason(s,scroll){gSel=s;render();if(scroll){try{$("gameSec").scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}}}
+  $("tbl").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr)pickSeason(tr.dataset.s,true);});
+  $("gSeason").addEventListener("click",e=>{const b=e.target.closest("button[data-s]");if(b)pickSeason(b.dataset.s,false);});
+
+  function setMode(m){mode=m;$("mAvg").setAttribute("aria-pressed",m==="avg");$("mSum").setAttribute("aria-pressed",m==="sum");render();}
+  $("mAvg").onclick=()=>setMode("avg");$("mSum").onclick=()=>setMode("sum");
+
+  (async()=>{
+    try{
+      const d=await fetch("data.json?t="+Date.now(),{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();});
+      seasons=(d.seasons||[]).filter(x=>x.season);
+      meta={updatedAt:d.updatedAt,lastCheck:d.lastCheck,lastResult:d.lastResult};
+      logs={};Object.entries(d.gamelogs||{}).forEach(([s,g])=>logs[s]={season:s,games:g});
+      $("emptyBox").hidden=!!seasons.length;
+      if(!seasons.length)$("updated").textContent="";
+      render();
+    }catch(e){$("updated").textContent="";$("emptyBox").textContent="기록 파일(data.json)을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.";$("emptyBox").hidden=false;}
+  })();
+})();
+</script>
+
+</body>
+</html>

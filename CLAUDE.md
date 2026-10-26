@@ -1,0 +1,21 @@
+# 정웅이 기록
+
+안양 정관장 박정웅 선수(KBL 선수번호 291746)의 KBL 정규시즌 기록을 보는 개인용 정적 페이지.
+
+## 구조
+- `index.html` — 페이지 하나. `data.json`을 읽어 통산 누적, 이번 시즌 평균, 시즌별 성장, 시즌별 기록표(누적/평균), 경기별 기록을 그린다. 시즌 줄을 누르면 그 시즌 경기별 기록이 나온다.
+- `data.json` — `{updatedAt, lastCheck, lastResult, seasons:[시즌별 누적], gamelogs:{시즌명:[경기별]}}`.
+- `scripts/fetch.mjs` — KBL 데이터 서버(kbl-api.sports2i.com)에서 기록을 받아 `data.json`을 갱신. 직접 호출이 막히면 Playwright로 kbl.or.kr을 열고 페이지 안에서 호출한다.
+- `.github/workflows/update.yml` — 매일 한국 시간 자정에 `fetch.mjs` 실행 후 바뀐 `data.json`을 커밋. Actions 탭에서 수동 실행도 가능.
+
+## 데이터 서버 메모
+- 시즌 목록: `GET https://kbl-api.sports2i.com/api/v1/Common/recent-seasons?seriesCd=1`
+- 경기별 기록: `GET .../players/categories/game/{시즌코드}/{시즌코드-1}/291746` → `RegularGameRecords`
+- 시즌 코드: 2024-2025=45, 2025-2026=47, 2026-2027=49 (D리그는 짝수)
+- 필드: fg/fgA=2점 성공/시도, threep/threepA=3점, ft/ftA=자유투, oR/dR/aS/sT/bS/tO=공리/수리/어시/스틸/블록/턴오버, foulTot=파울, playSec=출전 초, margin=+/-, awayTeam=상대 팀코드
+- 팀코드: 06 수원 KT, 10 울산 현대모비스, 16 원주 DB, 35 서울 삼성, 50 창원 LG, 55 서울 SK, 60 부산 KCC, 64 대구 한국가스공사, 66 고양 소노, 70 안양 정관장
+- 2026-10-26 기준 확인값: 통산 77경기 284점, 2026-27 9경기 31점 / 2025-26 49경기 224점 / 2024-25 19경기 29점
+
+## 사용자
+- 한국어로 설명, 화면 문구도 한국어. 영어 약어는 괄호로 한글 병기.
+- 누적(통산) 기록을 가장 중요하게 봄.

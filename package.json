@@ -1,0 +1,7 @@
+{
+  "name": "jw-stats",
+  "private": true,
+  "type": "module",
+  "scripts": { "update": "node scripts/fetch.mjs" },
+  "dependencies": { "playwright": "1.48.2" }
+}
