@@ -11,7 +11,7 @@
 - `scripts/fetch.mjs` — KBL 데이터 서버(kbl-api.sports2i.com)에서 기록을 받아 `data.json`을 갱신. 직접 호출이 막히면 Playwright로 kbl.or.kr을 열고 페이지 안에서 호출한다. 안전장치: 기존 시즌이 사라지거나 경기 수가 줄면 저장하지 않고 실패(기존 data.json 유지).
 - `.github/workflows/update.yml` — 매일 한국 시간 자정에 `fetch.mjs` 실행 후 바뀐 `data.json`을 커밋. Actions 탭에서 수동 실행도 가능.
 - 수동 업데이트: 주소 끝에 `#key`를 붙여 열면 GitHub 토큰(이 저장소 Actions 읽기/쓰기만)을 그 기기 localStorage(`jwToken`)에 저장. 토큰이 있는 기기에만 맨 위 ↻ 버튼이 보이고, 누르면 워크플로를 실행한 뒤 data.json이 바뀔 때까지 10초마다 다시 읽는다.
-- 방문자 수: 무료 공개 카운터 abacus(`https://abacus.jasoncameron.dev`, 네임스페이스 `winningwoong-v2`, 키 `total`·`d-YYYY-MM-DD`(한국 날짜))에 숫자만 센다. 한 기기 하루 1번(localStorage `jwSeen`), 열쇠 있는 기기·winningwoong.vercel.app 이외 주소(Vercel 배포 미리보기 로봇)·navigator.webdriver는 세지 않음. (v1 `winningwoong-jw4`는 로봇이 세어져 버림) 열쇠 있는 기기에만 맨 아래에 오늘 방문자 수와 최근 7일 막대(막대마다 숫자). 누적은 세기만 하고 화면에 안 보임.
+- 방문자 수: 무료 공개 카운터 abacus(`https://abacus.jasoncameron.dev`, 네임스페이스 `winningwoong-v2`, 키 `total`·`d-YYYY-MM-DD`(한국 날짜))에 숫자만 센다. 한 기기 하루 1번(localStorage `jwSeen`), 열쇠 있는 기기·winningwoong.vercel.app 이외 주소(Vercel 배포 미리보기 로봇)·navigator.webdriver는 세지 않음. (v1 `winningwoong-jw4`는 로봇이 세어져 버림) 열쇠 있는 기기에만 맨 아래에 오늘 방문자 수와 최근 7일 막대(막대마다 숫자). 누적은 세기만 하고 화면에 안 보임. 앱으로 연 사람 `a-YYYY-MM-DD`(display-mode standalone, 하루 1번, localStorage `jwSeenApp`), 설치 `installs`(appinstalled 이벤트, 안드로이드·PC만, 기기당 1번 `jwInstalled`) — 2026-10-27부터 셈.
 - 앱 설치 안내: 휴대폰에서 앱으로 열지 않았을 때 팝업(아이폰·안드로이드·카카오톡 등 앱 속 브라우저별 안내). 맨 아래 '앱으로 설치'로 다시 열 수 있다. 하루/일주일 보지 않기(localStorage `jwInstallUntil`). 주소 끝 `#popup`이면 앱 안·PC에서도 미리 보기. `sw.js`는 설치용(캐시 안 함).
 
 ## 데이터 서버 메모

@@ -490,14 +490,24 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
       store.set("jwSeen",kst());
       ["total","d-"+kst()].forEach(k=>fetch(`${CNT}/hit/${NS}/${k}`,{keepalive:true}).catch(()=>{}));
     }
+    // 앱으로 연 사람(홈 화면 아이콘으로 실행, 아이폰 포함): 한 기기 하루 1번.
+    const appMode=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+    if(real&&!own&&appMode&&store.get("jwSeenApp")!==kst()){
+      store.set("jwSeenApp",kst());
+      fetch(`${CNT}/hit/${NS}/a-${kst()}`,{keepalive:true}).catch(()=>{});
+    }
+    // 설치 수(설치 순간을 알려 주는 안드로이드·PC만, 아이폰은 안 세짐): 한 기기 1번.
+    addEventListener("appinstalled",()=>{
+      if(real&&!store.get("jwToken")&&!store.get("jwInstalled")){store.set("jwInstalled","1");fetch(`${CNT}/hit/${NS}/installs`,{keepalive:true}).catch(()=>{});}
+    });
     if(!own)return;
     const get=k=>fetch(`${CNT}/get/${NS}/${k}`).then(r=>r.ok?r.json():{value:0}).then(d=>Number(d.value)||0).catch(()=>null);
     const days=[6,5,4,3,2,1,0].map(kst);
-    const vals=await Promise.all(days.map(d=>get("d-"+d)));
+    const [installs,appToday,...vals]=await Promise.all([get("installs"),get("a-"+kst()),...days.map(d=>get("d-"+d))]);
     if(vals.every(x=>x===null))return;
     const max=Math.max(...vals.map(x=>x||0),1);
     // 오늘 방문자 수 + 최근 7일 막대(막대마다 숫자)
-    $("visits").innerHTML=`오늘 방문자 <b>${vals[6]||0}</b>`+
+    $("visits").innerHTML=`오늘 방문자 <b>${vals[6]||0}</b> · 앱으로 연 사람 <b>${appToday||0}</b> · 설치 누적 <b>${installs||0}</b>`+
       `<div class="spark">${vals.map(x=>`<div class="c"><i>${x||0}</i><span style="height:${Math.round((x||0)/max*18)}px"></span></div>`).join("")}</div>`+
       `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
     $("visits").hidden=false;
