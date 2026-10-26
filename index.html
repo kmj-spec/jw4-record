@@ -127,14 +127,15 @@ th:not(:first-child),td:not(:first-child){text-align:center}
 .help[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .foot{font-size:12px;color:var(--muted);line-height:1.6}
 .fh{display:flex;align-items:center;gap:6px;width:100%;border:0;background:none;padding:0;font:inherit;letter-spacing:inherit;color:inherit;cursor:pointer;text-align:left}
-.fh::after{content:"⌄";margin-left:auto;font-size:16px;line-height:1;letter-spacing:0;transform:translateY(-3px);transition:transform .15s}
-.fh[aria-expanded="true"]::after{transform:translateY(2px) rotate(180deg)}
+/* 접기 표시: 동그라미 안의 화살표 */
+.fh::after,.fchev::after{content:"";flex:none;width:30px;height:30px;border:1px solid var(--line);border-radius:50%;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6668' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") center/16px no-repeat;transition:transform .15s}
+.fh::after{margin-left:auto;margin-right:4px}
+.fh[aria-expanded="true"]::after,.fold.open .fchev::after{transform:rotate(180deg)}
 .fold .thead h2{flex:1}
 /* 제목 줄에 버튼(누적/평균)이 있는 칸은 접기 표시를 버튼 오른쪽 끝에 둔다 */
 .thead .fh::after{display:none}
-.fchev{border:0;background:none;padding:0 0 0 4px;color:var(--muted);cursor:pointer}
-.fchev::after{content:"⌄";display:inline-block;font-size:16px;line-height:1;transform:translateY(-3px);transition:transform .15s}
-.fold.open .fchev::after{transform:translateY(2px) rotate(180deg)}
+.fchev{border:0;background:none;padding:0;margin:0 4px 0 6px;cursor:pointer;display:flex}
+.fchev::after{display:block}
 .fold:not(.open) > :not(h2):not(.thead), .fold:not(.open) .seg{display:none}
 .fold:not(.open) h2, .fold:not(.open) .thead{margin-bottom:0}
 .fold{border-top:1px solid var(--line);padding-top:14px}
