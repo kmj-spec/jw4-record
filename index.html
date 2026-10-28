@@ -478,34 +478,32 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     done("아직 반영 전이에요. 잠시 뒤 새로고침해 주세요.");
   };
 
-  // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
-  // 숫자는 열쇠가 있는 기기에만 보인다.
-  const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-v2";
+  // 방문자 수: 우리 Vercel 저장소(/api/visit, /api/stats)에 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
+  // 숫자는 열쇠가 있는 기기에만 보이고, 서버도 열쇠를 확인한 뒤에만 숫자를 준다.
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
   (async()=>{
     const own=!!store.get("jwToken");
     // 진짜 주소로 들어온 사람만 센다(Vercel 배포 미리보기 로봇·자동화 브라우저 제외).
     const real=location.hostname==="winningwoong.vercel.app"&&!navigator.webdriver;
-    if(real&&!own&&store.get("jwSeen")!==kst()){
-      store.set("jwSeen",kst());
-      ["total","d-"+kst()].forEach(k=>fetch(`${CNT}/hit/${NS}/${k}`,{keepalive:true}).catch(()=>{}));
-    }
-    // 앱으로 연 사람(홈 화면 아이콘으로 실행, 아이폰 포함): 한 기기 하루 1번.
     const appMode=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
-    if(real&&!own&&appMode&&store.get("jwSeenApp")!==kst()){
-      store.set("jwSeenApp",kst());
-      fetch(`${CNT}/hit/${NS}/a-${kst()}`,{keepalive:true}).catch(()=>{});
+    if(real&&!own){
+      const seen=store.get("jwSeen")===kst(),seenApp=store.get("jwSeenApp")===kst();
+      // 하루 첫 방문이면 방문+1, 앱으로 연 것도 하루 첫 번이면 앱+1
+      if(!seen||(appMode&&!seenApp)){
+        const app=appMode&&!seenApp;
+        fetch("/api/visit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({app,visit:!seen}),keepalive:true}).catch(()=>{});
+        store.set("jwSeen",kst());if(app)store.set("jwSeenApp",kst());
+      }
     }
     if(!own)return;
-    const get=k=>fetch(`${CNT}/get/${NS}/${k}`).then(r=>r.ok?r.json():{value:0}).then(d=>Number(d.value)||0).catch(()=>null);
-    const days=[6,5,4,3,2,1,0].map(kst);
-    const [appToday,...vals]=await Promise.all([get("a-"+kst()),...days.map(d=>get("d-"+d))]);
-    if(vals.every(x=>x===null))return;
-    const max=Math.max(...vals.map(x=>x||0),1);
-    // 오늘 방문자 수 + 최근 7일 막대(막대마다 숫자)
-    $("visits").innerHTML=`오늘 방문 <b>${vals[6]||0}</b> · 앱 <b>${appToday||0}</b>`+
-      `<div class="spark">${vals.map(x=>`<div class="c"><i>${x||0}</i><span style="height:${Math.round((x||0)/max*18)}px"></span></div>`).join("")}</div>`+
-      `<div class="days">${days.map(d=>`<span>${+d.slice(8)}</span>`).join("")}</div>`;
+    let d=null;
+    try{const r=await fetch("/api/stats",{headers:{Authorization:"Bearer "+store.get("jwToken")},cache:"no-store"});if(r.ok)d=await r.json();}catch(e){}
+    if(!d){$("visits").textContent="방문 통계를 불러오지 못했어요";$("visits").hidden=false;return;}
+    const vals=d.days.map(x=>x.visits),max=Math.max(...vals,1);
+    // 오늘 방문 수 · 앱 + 최근 7일 막대(막대마다 숫자)
+    $("visits").innerHTML=`오늘 방문 <b>${vals[6]}</b> · 앱 <b>${d.appToday}</b>`+
+      `<div class="spark">${vals.map(x=>`<div class="c"><i>${x}</i><span style="height:${Math.round(x/max*18)}px"></span></div>`).join("")}</div>`+
+      `<div class="days">${d.days.map(x=>`<span>${+x.date.slice(8)}</span>`).join("")}</div>`;
     $("visits").hidden=false;
   })();
 
