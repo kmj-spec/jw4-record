@@ -491,7 +491,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
     const d=Math.floor(s/86400);s%=86400;
     // 기념일(매년 12월 4일 = N주년, 100일 단위 = N일)에는 그날 하루 🎉
     const anniv=d>0&&new Date(DEBUT+d*864e5+9*3600e3).toISOString().slice(5,10)==="12-04",hundred=d>0&&d%100===0;
-    $("debut").textContent=`${anniv||hundred?"🎉 ":""}${d}일 ${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
+    $("debut").textContent=`${anniv?`🎉 ${Math.round(d/365.25)}주년 · `:hundred?"🎉 ":""}${d}일 ${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
     $("debut").title=(anniv?`데뷔 ${Math.round(d/365.25)}주년! `:hundred?`데뷔 ${d}일! `:"")+"2024.12.04 원주 DB전 데뷔";
   }
   tick();setInterval(tick,1000);
