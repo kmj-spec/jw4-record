@@ -40,7 +40,18 @@ button{cursor:pointer}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--red);padding-bottom:14px}
 .hero h1{font-family:var(--display);font-weight:400;font-size:32px;margin:0;line-height:1}
 .hero p{margin:6px 0 0;color:var(--muted);font-size:13px;letter-spacing:.04em}
-#debut b{color:var(--red);font-family:var(--mono);font-weight:600}
+/* 데뷔 시계: 전광판 느낌의 7세그먼트 숫자(직접 그림) */
+.led{display:inline-flex;flex-direction:column;gap:6px;margin-top:12px;padding:10px 14px 8px;background:#111;border-radius:10px;box-shadow:inset 0 0 0 1px #2a2a2a,inset 0 2px 8px rgba(0,0,0,.6)}
+.led .lt{font-size:10px;letter-spacing:.12em;color:#ff8a3d;opacity:.85}
+.led .row{display:flex;align-items:flex-end;gap:10px}
+.led .grp{display:flex;flex-direction:column;align-items:center;gap:3px}
+.led .dg{display:flex;gap:3px}
+.led svg{width:17px;height:30px;display:block}
+.led .on{fill:#ff3b3b;filter:drop-shadow(0 0 3px rgba(255,59,59,.85))}
+.led .off{fill:#ff3b3b;opacity:.09}
+.led .u{font-size:9px;color:#aaa;letter-spacing:.1em}
+.led .col{display:flex;flex-direction:column;gap:7px;padding-bottom:20px}
+.led .col i{width:4px;height:4px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 4px rgba(255,59,59,.9)}
 .updated{font-size:12px;color:var(--muted);font-family:var(--mono);text-align:right}
 .upd{display:flex;align-items:center;justify-content:flex-end;gap:12px;width:100%;order:-1;margin-bottom:-4px}
 .upd .info{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -192,7 +203,8 @@ body.on-news > .wrap:not(#newsPage){display:none}
   <header class="hero">
     <div>
       <h1>#4 박정웅</h1>
-      <p>안양 정관장 · KBL 정규시즌 기록<span id="debut"></span></p>
+      <p>안양 정관장 · KBL 정규시즌 기록</p>
+      <div class="led" id="debut" aria-label="데뷔 후 지난 시간"></div>
     </div>
     <div class="upd">
       <div class="info">
@@ -482,9 +494,19 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
   // 숫자는 열쇠가 있는 기기에만 보인다.
   const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-v2";
-  // 데뷔일 카운트: 2024-12-04(원주 DB전)를 D+0으로 센다(1주년 = D+365). 한국 날짜 기준.
-  const debutDay=()=>{const t=Date.parse(new Date(Date.now()+9*3600e3).toISOString().slice(0,10)),d=Date.parse("2024-12-04");return Math.round((t-d)/864e5);};
-  $("debut").innerHTML=` · 데뷔 <b>D+${debutDay()}</b>`;
+  // 데뷔 시계: 2024-12-04 0시(한국 시간, 원주 DB전 날)부터 지난 시간. 일 수는 데뷔일 = 0일(1주년 = 365일).
+  const SEG={a:"4,1 16,1 14,4 6,4",b:"18.5,3 18.5,15 17,16.5 15.5,15 15.5,6",c:"18.5,21 18.5,33 15.5,30 15.5,21 17,19.5",d:"6,32 14,32 16,35 4,35",e:"1.5,21 3,19.5 4.5,21 4.5,30 1.5,33",f:"1.5,3 4.5,6 4.5,15 3,16.5 1.5,15",g:"5,16.5 15,16.5 16.5,18 15,19.5 5,19.5 3.5,18"};
+  const LIT=["abcdef","bc","abdeg","abcdg","bcfg","acdfg","acdefg","abc","abcdefg","abcdfg"];
+  const digit=n=>`<svg viewBox="0 0 20 36" aria-hidden="true">${Object.entries(SEG).map(([k,p])=>`<polygon points="${p}" class="${LIT[n].includes(k)?"on":"off"}"/>`).join("")}</svg>`;
+  const group=(v,len,unit)=>`<div class="grp"><div class="dg">${String(v).padStart(len,"0").split("").map(x=>digit(+x)).join("")}</div><span class="u">${unit}</span></div>`;
+  const DEBUT=Date.parse("2024-12-03T15:00:00Z"); // = 2024-12-04 00:00 한국 시간
+  function tick(){
+    let s=Math.max(0,Math.floor((Date.now()-DEBUT)/1000));
+    const d=Math.floor(s/86400);s%=86400;const hh=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
+    const colon='<div class="col"><i></i><i></i></div>';
+    $("debut").innerHTML=`<span class="lt">DEBUT 2024.12.04 · 데뷔 후</span><div class="row">${group(d,3,"일")}${colon}${group(hh,2,"시간")}${colon}${group(mm,2,"분")}${colon}${group(ss,2,"초")}</div>`;
+  }
+  tick();setInterval(tick,1000);
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
   (async()=>{
     const own=!!store.get("jwToken");
