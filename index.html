@@ -40,18 +40,20 @@ button{cursor:pointer}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--red);padding-bottom:14px}
 .hero h1{font-family:var(--display);font-weight:400;font-size:32px;margin:0;line-height:1}
 .hero p{margin:6px 0 0;color:var(--muted);font-size:13px;letter-spacing:.04em}
-/* 데뷔 시계: 전광판 느낌의 7세그먼트 숫자(직접 그림) */
-.led{display:inline-flex;flex-direction:column;gap:6px;margin-top:12px;padding:10px 14px 8px;background:#111;border-radius:10px;box-shadow:inset 0 0 0 1px #2a2a2a,inset 0 2px 8px rgba(0,0,0,.6)}
-.led .lt{font-size:10px;letter-spacing:.12em;color:#ff8a3d;opacity:.85}
-.led .row{display:flex;align-items:flex-end;gap:10px}
-.led .grp{display:flex;flex-direction:column;align-items:center;gap:3px}
-.led .dg{display:flex;gap:3px}
-.led svg{width:17px;height:30px;display:block}
-.led .on{fill:#ff3b3b;filter:drop-shadow(0 0 3px rgba(255,59,59,.85))}
-.led .off{fill:#ff3b3b;opacity:.09}
-.led .u{font-size:9px;color:#aaa;letter-spacing:.1em}
-.led .col{display:flex;flex-direction:column;gap:7px;padding-bottom:20px}
-.led .col i{width:4px;height:4px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 4px rgba(255,59,59,.9)}
+/* 데뷔 시계: 만화 속 작은 전광판(굵은 테두리·도장 그림자·나사·다리) */
+.led{position:relative;display:inline-flex;align-items:center;gap:5px;margin:20px 0 8px;padding:6px 8px 5px;background:#2a2627;border:2.5px solid #1d1a1b;border-radius:7px;box-shadow:2px 2px 0 #1d1a1b}
+.led::before,.led::after{content:"";position:absolute;bottom:-9px;width:3px;height:7px;background:#1d1a1b;border-radius:0 0 2px 2px}
+.led::before{left:12px}.led::after{right:12px}
+.led .tag{position:absolute;top:-14px;left:7px;background:var(--red);color:#fff;font:800 8px/1 var(--body);letter-spacing:.08em;padding:3px 5px 2px;border:2px solid #1d1a1b;border-radius:5px}
+.led .bolt{position:absolute;top:3px;width:3px;height:3px;border-radius:50%;background:#6b6264}
+.led .bolt.r{right:3px}.led .bolt.l{left:3px;display:none}
+.led .dg{display:flex;gap:1.5px}
+.led svg{width:8px;height:14px;display:block}
+.led .on{fill:#ffd34d;filter:drop-shadow(0 0 1.5px rgba(255,211,77,.8))}
+.led .off{fill:#ffd34d;opacity:.1}
+.led .u{font:700 8px/1 var(--body);color:#ffd34d;margin:0 2px 0 1px;align-self:flex-end;padding-bottom:1px}
+.led .col{display:flex;flex-direction:column;gap:3px}
+.led .col i{width:2px;height:2px;border-radius:50%;background:#ffd34d}
 .updated{font-size:12px;color:var(--muted);font-family:var(--mono);text-align:right}
 .upd{display:flex;align-items:center;justify-content:flex-end;gap:12px;width:100%;order:-1;margin-bottom:-4px}
 .upd .info{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -204,7 +206,7 @@ body.on-news > .wrap:not(#newsPage){display:none}
     <div>
       <h1>#4 박정웅</h1>
       <p>안양 정관장 · KBL 정규시즌 기록</p>
-      <div class="led" id="debut" aria-label="데뷔 후 지난 시간"></div>
+      <div class="led" id="debut" aria-label="데뷔(2024.12.04) 후 지난 시간" title="2024.12.04 원주 DB전 데뷔"></div>
     </div>
     <div class="upd">
       <div class="info">
@@ -498,13 +500,13 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const SEG={a:"4,1 16,1 14,4 6,4",b:"18.5,3 18.5,15 17,16.5 15.5,15 15.5,6",c:"18.5,21 18.5,33 15.5,30 15.5,21 17,19.5",d:"6,32 14,32 16,35 4,35",e:"1.5,21 3,19.5 4.5,21 4.5,30 1.5,33",f:"1.5,3 4.5,6 4.5,15 3,16.5 1.5,15",g:"5,16.5 15,16.5 16.5,18 15,19.5 5,19.5 3.5,18"};
   const LIT=["abcdef","bc","abdeg","abcdg","bcfg","acdfg","acdefg","abc","abcdefg","abcdfg"];
   const digit=n=>`<svg viewBox="0 0 20 36" aria-hidden="true">${Object.entries(SEG).map(([k,p])=>`<polygon points="${p}" class="${LIT[n].includes(k)?"on":"off"}"/>`).join("")}</svg>`;
-  const group=(v,len,unit)=>`<div class="grp"><div class="dg">${String(v).padStart(len,"0").split("").map(x=>digit(+x)).join("")}</div><span class="u">${unit}</span></div>`;
   const DEBUT=Date.parse("2024-12-03T15:00:00Z"); // = 2024-12-04 00:00 한국 시간
   function tick(){
     let s=Math.max(0,Math.floor((Date.now()-DEBUT)/1000));
     const d=Math.floor(s/86400);s%=86400;const hh=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;
     const colon='<div class="col"><i></i><i></i></div>';
-    $("debut").innerHTML=`<span class="lt">DEBUT 2024.12.04 · 데뷔 후</span><div class="row">${group(d,3,"일")}${colon}${group(hh,2,"시간")}${colon}${group(mm,2,"분")}${colon}${group(ss,2,"초")}</div>`;
+    const num=(v,len)=>`<div class="dg">${String(v).padStart(len,"0").split("").map(x=>digit(+x)).join("")}</div>`;
+    $("debut").innerHTML=`<span class="tag">DEBUT</span><i class="bolt r"></i>${num(d,3)}<span class="u">일</span>${num(hh,2)}${colon}${num(mm,2)}${colon}${num(ss,2)}`;
   }
   tick();setInterval(tick,1000);
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
