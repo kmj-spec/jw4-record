@@ -40,6 +40,7 @@ button{cursor:pointer}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:3px solid var(--red);padding-bottom:14px}
 .hero h1{font-family:var(--display);font-weight:400;font-size:32px;margin:0;line-height:1}
 .hero p{margin:6px 0 0;color:var(--muted);font-size:13px;letter-spacing:.04em}
+#debut b{color:var(--red);font-family:var(--mono);font-weight:600}
 .updated{font-size:12px;color:var(--muted);font-family:var(--mono);text-align:right}
 .upd{display:flex;align-items:center;justify-content:flex-end;gap:12px;width:100%;order:-1;margin-bottom:-4px}
 .upd .info{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -191,7 +192,7 @@ body.on-news > .wrap:not(#newsPage){display:none}
   <header class="hero">
     <div>
       <h1>#4 박정웅</h1>
-      <p>안양 정관장 · KBL 정규시즌 기록</p>
+      <p>안양 정관장 · KBL 정규시즌 기록<span id="debut"></span></p>
     </div>
     <div class="upd">
       <div class="info">
@@ -481,6 +482,9 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
   // 숫자는 열쇠가 있는 기기에만 보인다.
   const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-v2";
+  // 데뷔일 카운트: 2024-12-04(원주 DB전)를 D+0으로 센다(1주년 = D+365). 한국 날짜 기준.
+  const debutDay=()=>{const t=Date.parse(new Date(Date.now()+9*3600e3).toISOString().slice(0,10)),d=Date.parse("2024-12-04");return Math.round((t-d)/864e5);};
+  $("debut").innerHTML=` · 데뷔 <b>D+${debutDay()}</b>`;
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
   (async()=>{
     const own=!!store.get("jwToken");
