@@ -489,7 +489,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   function tick(){
     let s=Math.max(0,Math.floor((Date.now()-DEBUT)/1000));
     const d=Math.floor(s/86400);s%=86400;
-    $("debut").textContent=`데뷔 ${d}일 ${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
+    $("debut").textContent=`${d}일 ${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
   }
   tick();setInterval(tick,1000);
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
