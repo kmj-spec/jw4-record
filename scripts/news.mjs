@@ -59,7 +59,8 @@ const items = all
   .slice(0, KEEP)
   .map(({ title, source, link, date }) => {
     const old = prev.get(key(title));
-    return { title, source, link, date, added: old ? (old.added || old.date) : (prev.size ? now : date), ok: approved.has(key(title)) };
+    // 이미 받은 기사는 처음 날짜를 그대로 둔다(언론사가 기사를 고치면 구글이 날짜를 수정 시각으로 바꿔 보내기 때문).
+    return { title, source, link, date: old ? old.date : date, added: old ? (old.added || old.date) : (prev.size ? now : date), ok: approved.has(key(title)) };
   });
 
 if (!items.length) { console.log("받은 기사가 없어요. 기존 news.json을 그대로 둡니다."); process.exit(0); }
