@@ -483,17 +483,17 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   // 방문자 수: 무료 공개 카운터(abacus)에 날짜별·누적 숫자만 센다. 한 기기는 하루 1번, 열쇠가 있는 내 기기는 세지 않는다.
   // 숫자는 열쇠가 있는 기기에만 보인다.
   const CNT="https://abacus.jasoncameron.dev",NS="winningwoong-v2";
-  // 데뷔 시계: 2024-12-04 0시(한국 시간, 원주 DB전 날)부터 지난 시간. 일 수는 데뷔일 = 0일(1주년 = 365일).
+  // 데뷔 시계: 2024-12-04 0시(한국 시간, 원주 DB전 날)부터 지난 시간. 일 수는 데뷔일 = 1일(2026-11-03 = 700일, 1주년 = 366일).
   const DEBUT=Date.parse("2024-12-03T15:00:00Z"); // = 2024-12-04 00:00 한국 시간
   const p2=n=>String(n).padStart(2,"0");
   function tick(){
     let s=Math.max(0,Math.floor((Date.now()-DEBUT)/1000));
-    const d=Math.floor(s/86400);s%=86400;
+    const past=Math.floor(s/86400),d=past+1;s%=86400; // past = 지난 날 수, d = 데뷔일을 1일로 센 날 수
     // 기념일(매년 12월 4일 = N주년, 100일 단위 = N일)에는 그날 하루 🎉
-    const anniv=d>0&&new Date(DEBUT+d*864e5+9*3600e3).toISOString().slice(5,10)==="12-04",hundred=d>0&&d%100===0;
+    const anniv=past>0&&new Date(DEBUT+past*864e5+9*3600e3).toISOString().slice(5,10)==="12-04",hundred=d%100===0;
     const hms=`${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
-    $("debut").textContent=anniv?`🎉 ${Math.round(d/365.25)}주년 ${hms}`:`${hundred?"🎉 ":""}${d}일 ${hms}`;
-    $("debut").title=(anniv?`데뷔 ${Math.round(d/365.25)}주년! `:hundred?`데뷔 ${d}일! `:"")+"2024.12.04 원주 DB전 데뷔";
+    $("debut").textContent=anniv?`🎉 ${Math.round(past/365.25)}주년 ${hms}`:`${hundred?"🎉 ":""}${d}일 ${hms}`;
+    $("debut").title=(anniv?`데뷔 ${Math.round(past/365.25)}주년! `:hundred?`데뷔 ${d}일! `:"")+"2024.12.04 원주 DB전 데뷔";
   }
   tick();setInterval(tick,1000);
   const kst=(off=0)=>new Date(Date.now()+9*3600e3-off*864e5).toISOString().slice(0,10);
